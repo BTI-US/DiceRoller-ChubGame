@@ -97,9 +97,9 @@ export const createDices = (count) => {
     shapeList.splice(0, shapeList.length);
     Array.from({length: count}).map(() => {
         const position = {
-            x: (Math.random()-0.5)*4,
-            y: 4,
-            z: (Math.random()-0.5)*4
+            x: (Math.random()-0.5)*3,
+            y: 3,
+            z: (Math.random()-0.5)*3
         }
 
         const cloneDiceModel = diceModel.clone();
@@ -113,13 +113,12 @@ export const createDices = (count) => {
                 new CANNON.Vec3(0.25, 0.25, 0.25),
             )
         })
-        const quaternion = new CANNON.Quaternion();
-        quaternion.setFromEuler(
+
+        diceBody.quaternion.setFromEuler(
             Math.random()*2*Math.PI,
             Math.random()*2*Math.PI,
             Math.random()*2*Math.PI
         )
-        diceBody.quaternion.copy(quaternion)
         cloneDiceModel.quaternion.copy(diceBody.quaternion)
         world.addBody(diceBody);
 
@@ -136,8 +135,6 @@ initCannon();
 
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.enableDamping = true;
-// orbitControls.enablePan = false;
-// orbitControls.enableZoom = false;
 orbitControls.maxPolarAngle = Math.PI / 2 - 0.1;
 
 let oldElapsedTime = 0;
