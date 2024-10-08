@@ -52,7 +52,7 @@ const initThree = () => {
     // const cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
     // scene.add(cameraHelper);
 
-    new GLTFLoader().load('/src/assets/dice.glb', (gltf) => {
+    new GLTFLoader().load('./dice.glb', (gltf) => {
         diceModel = gltf.scene;
         diceModel.scale.set(0.25, 0.25, 0.25);
         diceModel.traverse(child => {
