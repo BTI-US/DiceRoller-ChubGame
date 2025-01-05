@@ -1,3 +1,12 @@
+/*
+ * @Author: Phillweston 2436559745@qq.com
+ * @Date: 2025-01-01 22:00:54
+ * @LastEditors: Phillweston
+ * @LastEditTime: 2025-01-05 12:27:41
+ * @FilePath: \DiceRollerSimulator-ThreeJS\src\3d.js
+ * @Description: 
+ * 
+ */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import CANNON from 'cannon';
@@ -166,6 +175,27 @@ export const createDices = (count) => {
         };
         checkStability();
     });
+};
+
+export const sendDiceData = async (diceAmount, totalPoints, promotionCode) => {
+    try {
+        const response = await fetch('https://chubgame.com/api/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                diceAmount,
+                totalPoints,
+                promotionCode,
+                isPromotionUser,
+            }),
+        });
+        const data = await response.json();
+        console.log('Response from backend:', data);
+    } catch (error) {
+        console.error('Error sending data to backend:', error);
+    }
 };
 
 initThree();

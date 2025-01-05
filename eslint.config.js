@@ -1,3 +1,12 @@
+/*
+ * @Author: Phillweston 2436559745@qq.com
+ * @Date: 2025-01-01 22:00:54
+ * @LastEditors: Phillweston
+ * @LastEditTime: 2025-01-05 12:20:35
+ * @FilePath: \DiceRollerSimulator-ThreeJS\eslint.config.js
+ * @Description: 
+ * 
+ */
 import js from '@eslint/js'
 import globals from 'globals'
 import react from 'eslint-plugin-react'
