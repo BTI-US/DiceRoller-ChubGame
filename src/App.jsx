@@ -177,8 +177,8 @@ const App = () => {
             )}
 
             <div className="fixed top-3 left-3 text-[36px]">
-                <p>DICE</p>
-                <p>3D</p>
+                <p>DICE 3D</p>
+                <p>ChubGame</p>
             </div>
 
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 text-center text-[#0000009a]">
