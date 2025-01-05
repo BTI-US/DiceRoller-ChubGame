@@ -41,11 +41,19 @@ npm i
 npm run dev
 ```
 
+## Environment Variables
+
+|Variable Name|Description|Default Value|
+|-|-|-|
+|`VITE_VALIDATE_PROMOTION_CODE_API`|API endpoint to validate promotion code|`https://chubgame.com/api/validate`|
+|`VITE_SEND_DICE_DATA_API`|API endpoint to send dice data|`https://chubgame.com/api/send`|
+|`VITE_MAX_DICE_AMOUNT`|Maximum number of dice allowed|`10`|
+
 ## Milestone
 
 - [x] Basic 3D dice simulator
-- [ ] Send the current dice number to the server using HTTP POST
-- [ ] Add the promotion code feature
+- [x] Send the current dice number to the server using HTTP POST
+- [x] Add the promotion code feature
 
 ## License
 
