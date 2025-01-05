@@ -177,27 +177,6 @@ export const createDices = (count) => {
     });
 };
 
-export const sendDiceData = async (diceAmount, totalPoints, promotionCode) => {
-    try {
-        const response = await fetch('https://chubgame.com/api/send', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                diceAmount,
-                totalPoints,
-                promotionCode,
-                isPromotionUser,
-            }),
-        });
-        const data = await response.json();
-        console.log('Response from backend:', data);
-    } catch (error) {
-        console.error('Error sending data to backend:', error);
-    }
-};
-
 initThree();
 initCannon();
 

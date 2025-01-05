@@ -2,13 +2,17 @@
  * @Author: Phillweston 2436559745@qq.com
  * @Date: 2025-01-01 22:00:54
  * @LastEditors: Phillweston
- * @LastEditTime: 2025-01-05 12:31:59
+ * @LastEditTime: 2025-01-05 14:40:19
  * @FilePath: \DiceRollerSimulator-ThreeJS\src\App.jsx
  * @Description: 
  * 
  */
 import { useState } from 'react';
-import { createDices, sendDiceData } from './3d.js';
+import { createDices } from './3d.js';
+
+const VALIDATE_PROMOTION_CODE_API = import.meta.env.VITE_VALIDATE_PROMOTION_CODE_API;
+const SEND_DICE_DATA_API = import.meta.env.VITE_SEND_DICE_DATA_API;
+const MAX_DICE_AMOUNT = parseInt(import.meta.env.VITE_MAX_DICE_AMOUNT, 10);  // Parsing as an integer
 
 const App = () => {
     const [diceAmount, setDiceAmount] = useState(6);
@@ -17,11 +21,19 @@ const App = () => {
     const [showPromotionDialog, setShowPromotionDialog] = useState(true);
     const [promotionCode, setPromotionCode] = useState('');
     const [promotionSkipped, setPromotionSkipped] = useState(false);
-    const [showClipboardPopup, setShowClipboardPopup] = useState(false);
+    const [successPopup, setSuccessPopup] = useState('');
     const [errorPopup, setErrorPopup] = useState('');
+    const [warnPopup, setWarnPopup] = useState('');
+    const [infoPopup, setInfoPopup] = useState('');
 
     const handleClickAdd = () => {
-        setDiceAmount((d) => d + 1);
+        if (diceAmount < MAX_DICE_AMOUNT) {
+            setDiceAmount((d) => d + 1);
+        } else {
+            console.warn(`Maximum dice amount of ${MAX_DICE_AMOUNT} reached`);
+            setWarnPopup(`Maximum dice amount of ${MAX_DICE_AMOUNT} reached`);
+            setTimeout(() => setWarnPopup(''), 3000); // Hide error popup after 3 seconds
+        }
     };
 
     const handleClickSubtract = () => {
@@ -49,7 +61,29 @@ const App = () => {
         setShowPromotionDialog(false);
     };
 
-    const validatePromotionCode = (code) => {
+    const sendDiceData = async (diceAmount, totalPoints, promotionCode, isPromotionUser) => {
+        try {
+            const response = await fetch(SEND_DICE_DATA_API, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    diceAmount,
+                    totalPoints,
+                    promotionCode,
+                    isPromotionUser,
+                }),
+            });
+            const data = await response.json();
+            console.log('Response from backend:', data);
+        } catch (error) {
+            console.error('Error sending data to backend:', error);
+            throw error;
+        }
+    };
+
+    const validatePromotionCode = async (code) => {
         const regex = /^[a-zA-Z0-9]{16}$/;
         if (!code) {
             return 'Promotion code cannot be empty';
@@ -57,11 +91,28 @@ const App = () => {
         if (!regex.test(code)) {
             return 'Promotion code must be 16 characters long and contain only letters and numbers';
         }
+
+        try {
+            const response = await fetch(VALIDATE_PROMOTION_CODE_API, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ promotionCode: code }),
+            });
+            const data = await response.json();
+            if (!data.valid) {
+                return 'Invalid promotion code';
+            }
+        } catch (error) {
+            console.error('Error validating promotion code:', error);
+            return 'Error validating promotion code';
+        }
         return '';
     };
 
-    const handleSubmitPromotion = () => {
-        const error = validatePromotionCode(promotionCode);
+    const handleSubmitPromotion = async () => {
+        const error = await validatePromotionCode(promotionCode);
         if (error) {
             setErrorPopup(error);
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
@@ -75,19 +126,27 @@ const App = () => {
         try {
             await navigator.clipboard.writeText(promotionCode);
             console.log('Promotion code copied to clipboard');
-            setShowClipboardPopup(true);
-            setTimeout(() => setShowClipboardPopup(false), 3000); // Hide after 3 seconds
-            //await sendDiceData(diceAmount, totalPoints, promotionCode, true);
+            setSuccessPopup('Promotion code copied to clipboard');
+            setTimeout(() => setSuccessPopup(''), 3000); // Hide after 3 seconds
+            await sendDiceData(diceAmount, totalPoints, promotionCode, true);
+            setSuccessPopup('Promotion code saved successfully');
+            setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
         } catch (error) {
             console.error('Error saving promotion code:', error);
+            setErrorPopup('Error saving promotion code');
+            setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
         }
     };
 
     const handleSubmit = async () => {
         try {
-            //await sendDiceData(diceAmount, totalPoints, promotionCode, false);
+            await sendDiceData(diceAmount, totalPoints, promotionCode, false);
+            setSuccessPopup('Promotion code submitted successfully');
+            setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
         } catch (error) {
             console.error('Error submitting promotion code:', error);
+            setErrorPopup('Error submitting promotion code');
+            setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
         }
     };
 
@@ -159,15 +218,27 @@ const App = () => {
                 </div>
             )}
 
-            {showClipboardPopup && (
+            {successPopup && (
                 <div className="fixed top-0 left-0 right-0 bg-green-500 text-white text-center py-2 slide-down">
-                    Promotion code copied to clipboard
+                    {successPopup}
                 </div>
             )}
 
             {errorPopup && (
                 <div className="fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-2 slide-down">
                     {errorPopup}
+                </div>
+            )}
+
+            {warnPopup && (
+                <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 slide-down">
+                    {warnPopup}
+                </div>
+            )}
+
+            {infoPopup && (
+                <div className="fixed top-0 left-0 right-0 bg-blue-500 text-white text-center py-2 slide-down">
+                    {infoPopup}
                 </div>
             )}
         </div>

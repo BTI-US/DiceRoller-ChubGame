@@ -4,16 +4,23 @@ name: Deploy to GitHub Pages
 
 on:
   # Trigger deployment on pushes to the `main` branch
+  # Runs on pushes targeting the default branch
   push:
-    branches: ["main"]
+    branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+  pull_request_target:
+    branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
 
   # Allow manual runs from the GitHub Actions tab
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: read  # Read access to the repository contents
+  pages: write    # Write access to the GitHub Pages
+  id-token: write # Required for GitHub Pages deployment
 
 # Allow only one concurrent deployment, skipping runs queued between the run in progress and latest queued.
 concurrency:
@@ -23,6 +30,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       # Checkout the code
       - name: Checkout code
@@ -34,21 +42,38 @@ jobs:
         with:
           node-version: '20'
 
+      # Cache node_modules to speed up future installs
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
       # Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Build the app
+      # Build the app with environment variables
       - name: Build the app
+        env:
+          VITE_VALIDATE_PROMOTION_CODE_API: ${{ secrets.VITE_VALIDATE_PROMOTION_CODE_API || 'https://chubgame.com/api/validate' }}
+          VITE_SEND_DICE_DATA_API: ${{ secrets.VITE_SEND_DICE_DATA_API || 'https://chubgame.com/api/send' }}
+          VITE_MAX_DICE_AMOUNT: ${{ secrets.VITE_MAX_DICE_AMOUNT || 10 }}
         run: npm run build
 
       # Upload build artifacts to GitHub Pages
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './dist'  # Path to the build directory
 
       # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      # Optionally, set a custom status message if deployment succeeds
+      - name: Set deployment status
+        run: echo "Deployment successful"
