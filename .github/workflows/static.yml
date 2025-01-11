@@ -58,8 +58,8 @@ jobs:
       # Build the app with environment variables
       - name: Build the app
         env:
-          VITE_VALIDATE_PROMOTION_CODE_API: ${{ secrets.VITE_VALIDATE_PROMOTION_CODE_API || 'https://chubgame.com/api/validate' }}
-          VITE_SEND_DICE_DATA_API: ${{ secrets.VITE_SEND_DICE_DATA_API || 'https://chubgame.com/api/send' }}
+          VITE_VALIDATE_PROMOTION_CODE_API: ${{ secrets.VITE_VALIDATE_PROMOTION_CODE_API || 'https://chubgame.com/wp-json/chubgame/v1/validate' }}
+          VITE_SEND_DICE_DATA_API: ${{ secrets.VITE_SEND_DICE_DATA_API || 'https://chubgame.com/wp-json/chubgame/v1/send' }}
           VITE_MAX_DICE_AMOUNT: ${{ secrets.VITE_MAX_DICE_AMOUNT || 10 }}
         run: npm run build
 

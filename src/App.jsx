@@ -7,7 +7,7 @@
  * @Description: 
  * 
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createDices } from './3d.js';
 
 const VALIDATE_PROMOTION_CODE_API = import.meta.env.VITE_VALIDATE_PROMOTION_CODE_API;
@@ -25,6 +25,18 @@ const App = () => {
     const [errorPopup, setErrorPopup] = useState('');
     const [warnPopup, setWarnPopup] = useState('');
     const [infoPopup, setInfoPopup] = useState('');
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const usernameParam = params.get('username');
+        if (usernameParam) {
+            setUsername(usernameParam);
+        } else {
+            setWarnPopup('Please provide a username in the URL.');
+            setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
+        }
+    }, []);
 
     const handleClickAdd = () => {
         if (diceAmount < MAX_DICE_AMOUNT) {
@@ -73,9 +85,13 @@ const App = () => {
                     totalPoints,
                     promotionCode,
                     isPromotionUser,
+                    username,
                 }),
             });
             const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Error sending data');
+            }
             console.log('Response from backend:', data);
         } catch (error) {
             console.error('Error sending data to backend:', error);
@@ -98,9 +114,12 @@ const App = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ promotionCode: code }),
+                body: JSON.stringify({ promotionCode: code, username }),
             });
             const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Error validating promotion code');
+            }
             if (!data.valid) {
                 return 'Invalid promotion code';
             }
