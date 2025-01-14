@@ -45,8 +45,8 @@ npm run dev
 
 |Variable Name|Description|Default Value|
 |-|-|-|
-|`VITE_VALIDATE_PROMOTION_CODE_API`|API endpoint to validate promotion code|`https://chubgame.com/api/validate`|
-|`VITE_SEND_DICE_DATA_API`|API endpoint to send dice data|`https://chubgame.com/api/send`|
+|`VITE_VALIDATE_PROMOTION_CODE_API`|API endpoint to validate promotion code|`https://chubgame.com/wp-json/chubgame/v1/validate`|
+|`VITE_SEND_DICE_DATA_API`|API endpoint to send dice data|`https://chubgame.com/wp-json/chubgame/v1/send`|
 |`VITE_MAX_DICE_AMOUNT`|Maximum number of dice allowed|`10`|
 
 ## Milestone
