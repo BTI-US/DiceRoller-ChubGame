@@ -10,7 +10,7 @@
 
 A 3D dice simulator built on Three.js, utilizing Cannon.js as the physics engine, allowing users to control the number of the dices.
 
-Now you can find a live version at [here](https://bti-us.github.io/DiceRollerSimulator-ThreeJS/).
+Now you can find a live version at [here](https://dice,chubgame.com/).
 
 ## Features
 
@@ -49,11 +49,93 @@ npm run dev
 |`VITE_SEND_DICE_DATA_API`|API endpoint to send dice data|`https://chubgame.com/wp-json/chubgame/v1/send`|
 |`VITE_MAX_DICE_AMOUNT`|Maximum number of dice allowed|`10`|
 
+## WordPress API Endpoints
+
+### Validate Promotion Code
+
+This endpoint validates the promotion code provided by the user.
+
+**Endpoint:**
+
+```text
+POST /wp-json/dice-roller/v1/validate
+```
+
+**Request Body:**
+
+```json
+{
+    "promotionCode": "string",
+    "username": "string"
+}
+```
+
+**Response:**
+
+- **200 OK**: If the promotion code is valid.
+
+  ```json
+  {
+      "valid": true
+  }
+  ```
+
+- **400 Bad Request**: If the promotion code is invalid.
+
+  ```json
+  {
+      "valid": false,
+      "error": "Invalid promotion code"
+  }
+  ```
+
+### Send Dice Data
+
+This endpoint sends the dice data to the backend.
+
+**Endpoint:**
+
+```text
+POST /wp-json/dice-roller/v1/send
+```
+
+**Request Body:**
+
+```json
+{
+    "diceAmount": "integer",
+    "totalPoints": "integer",
+    "promotionCode": "string",
+    "isPromotionUser": "boolean",
+    "username": "string",
+    "chips": "integer"
+}
+```
+
+**Response:**
+
+- **200 OK**: If the data is successfully processed.
+
+  ```json
+  {
+      "success": true
+  }
+  ```
+
+- **400 Bad Request**: If there is an error processing the data.
+
+  ```json
+  {
+      "error": "Error message"
+  }
+  ```
+
 ## Milestone
 
 - [x] Basic 3D dice simulator
 - [x] Send the current dice number to the server using HTTP POST
 - [x] Add the promotion code feature
+- [x] Add the chip amount feature
 
 ## License
 

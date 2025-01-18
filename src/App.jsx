@@ -33,6 +33,8 @@ const App = () => {
     const [showCopyDialog, setShowCopyDialog] = useState(false);
     const [showHint, setShowHint] = useState(false);
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0});
+    const [showRegulationDialog, setShowRegulationDialog] = useState(false);
+    const [showAboutDialog, setShowAboutDialog] = useState(false);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -44,6 +46,22 @@ const App = () => {
             setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
         }
     }, []);
+
+    const handleOpenRegulation = () => {
+        setShowRegulationDialog(true);
+    };
+
+    const handleOpenAbout = () => {
+        setShowAboutDialog(true);
+    };
+
+    const handleCloseRegulation = () => {
+        setShowRegulationDialog(false);
+    };
+
+    const handleCloseAbout = () => {
+        setShowAboutDialog(false);
+    };
 
     // Generate a random promotion code when the component mounts
     const generatePromotionCode = () => {
@@ -357,9 +375,117 @@ const App = () => {
             )}
 
             <div className="fixed top-3 left-3 text-[36px]">
-                <p>DICE 3D</p>
-                <p>ChubGame</p>
+                <p
+                    onClick={handleOpenRegulation} 
+                    className="duration-300 active:scale-125 transition-transform hover:scale-105"
+                >
+                    Game Regulation</p>
+                <p
+                    onClick={handleOpenAbout} 
+                    className="duration-300 active:scale-125 transition-transform hover:scale-105"
+                >
+                    About ChubGame
+                </p>
             </div>
+
+            {showRegulationDialog && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto">
+                        <button
+                            onClick={handleCloseRegulation}
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                        >
+                            <FaTimes />
+                        </button>
+                        <h2 className="text-2xl font-bold mb-4">Dice Regulation</h2>
+                        <div className="text-left">
+                            <div className="mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700">
+                                <p className="font-bold">Objective:</p>
+                                <p>The goal of the game is to roll the dice and achieve the highest possible score.</p>
+                            </div>
+                            <div className="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700">
+                                <p className="font-bold">Rules:</p>
+                                <ul className="list-disc list-inside">
+                                    <li>Each player takes turns to roll the dice.</li>
+                                    <li>Players can roll up to a maximum of 6 dice at a time.</li>
+                                    <li>The total points are calculated based on the sum of the dice values.</li>
+                                    <li>Special combinations of dice rolls may yield bonus points.</li>
+                                </ul>
+                            </div>
+                            <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+                                <p className="font-bold">Scoring:</p>
+                                <ul className="list-disc list-inside">
+                                    <li>Each die face value contributes to the total score.</li>
+                                    <li>Rolling a 6 on all dice grants a bonus of 50 points.</li>
+                                    <li>Rolling three of a kind grants a bonus of 20 points.</li>
+                                </ul>
+                            </div>
+                            <div className="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
+                                <p className="font-bold">Penalties:</p>
+                                <ul className="list-disc list-inside">
+                                    <li>Rolling a 1 on any die results in a penalty of 5 points.</li>
+                                    <li>Rolling two 1s results in a penalty of 10 points.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="flex justify-center mt-4">
+                            <button
+                                onClick={handleCloseRegulation}
+                                className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showAboutDialog && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto">
+                        <button
+                            onClick={handleCloseAbout}
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                        >
+                            <FaTimes />
+                        </button>
+                        <h2 className="text-2xl font-bold mb-4">About ChubGame</h2>
+                        <div className="text-left">
+                            <p className="mb-4">MIT License</p>
+                            <p className="mb-4">Copyright (c) 2025 ChubGame</p>
+                            <p className="mb-4">
+                                Permission is hereby granted, free of charge, to any person obtaining a copy
+                                of this software and associated documentation files (the "Software"), to deal
+                                in the Software without restriction, including without limitation the rights
+                                to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+                                copies of the Software, and to permit persons to whom the Software is
+                                furnished to do so, subject to the following conditions:
+                            </p>
+                            <p className="mb-4">
+                                The above copyright notice and this permission notice shall be included in all
+                                copies or substantial portions of the Software.
+                            </p>
+                            <p className="mb-4">
+                                THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+                                IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+                                FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+                                AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+                                LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+                                OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+                                SOFTWARE.
+                            </p>
+                        </div>
+                        <div className="flex justify-center mt-4">
+                            <button
+                                onClick={handleCloseAbout}
+                                className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 text-center text-[#0000009a]">
                 <p className="text-[18px] relative">AMOUNT: {diceAmount}</p>
