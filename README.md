@@ -21,6 +21,28 @@ Now you can find a live version at [here](https://dice,chubgame.com/).
 - Randomized Initial Dice Positioning: Enhances realism by randomizing starting positions, resulting in more authentic outcomes.
 - Display Dice Roll Results: Shows the sum of the dice roll results, providing users with instant feedback.
 
+## How to Play the Game
+
+### Parent User
+
+1. Connect to the wallet first.
+2. After connecting, clicks the "Play Now" button of the Dice Game to start the game, then the game page will be popped up.
+3. Click "Skip" button of the "Promotion Code" dialog to skip the promotion code. (Parent user doesn't need to input the promotion code)
+4. Select the pre-defined chip amount or input the custom chip amount, then press the "Start" button to start the game.
+5. Click "+" or "-" button to increase or decrease the number of dices, then press the "Roll" button to roll the dices, then the dices will be rolled, after the dices stop rolling, the total points will be displayed.
+6. Click "Generate" button of the "Total Points" dialog to generate the promotion code, then the user data will be sent to the wordpress server. We will automatically deduct the chip amount from the parent user's wallet.
+7. If the parent user's total dice points are greater than the child user, we will firstly deduct the 0.5% for the service charge, then the parent user will get both the parent user's and the child user's chip amount. Otherwise, the parent user will lose the chip amount.
+
+### Child User
+
+1. Connect to the wallet first.
+2. After connecting, clicks the "Play Now" button of the Dice Game to start the game, then the game page will be popped up.
+3. Input the promotion code, then press the "Submit" button to submit the promotion code.
+4. Select the pre-defined chip amount or input the custom chip amount, then press the "Start" button to start the game.
+5. Click "+" or "-" button to increase or decrease the number of dices, then press the "Roll" button to roll the dices, then the dices will be rolled, after the dices stop rolling, the total points will be displayed.
+6. Click "Save" button of the "Total Points" dialog to save the user data to the wordpress server. We will automatically deduct the chip amount from the child user's wallet.
+7. If the child user's total dice points are greater than the parent user, we will firstly deduct the 0.5% for the service charge, then the child user will get both the parent user's and the child user's chip amount. Otherwise, the child user will lose the chip amount.
+
 ## Installation
 
 ### Clone the repository
@@ -51,84 +73,188 @@ npm run dev
 
 ## WordPress API Endpoints
 
-### Validate Promotion Code
+### Flowchart for the Validate Promotion Code
 
-This endpoint validates the promotion code provided by the user.
+Promotion Code Verification for Child User:
 
-**Endpoint:**
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant Database
 
-```text
-POST /wp-json/dice-roller/v1/validate
+    User->>API: Send POST /wp-json/dice-roller/v1/validate with promotionCode and username
+    API->>Database: Query promotion_codes table for promotionCode
+    Database->>API: Return promotion code record (valid or not)
+    API->>User: Return response with valid status or error message
 ```
 
-**Request Body:**
+### Flowchart for the Send Dice Data
+
+Parent User Sequence Diagram:
+
+```mermaid
+sequenceDiagram
+    participant Parent as Parent User
+    participant WP as WordPress Database
+    participant Dice as Dice Game Logic
+
+    Parent->>WP: Register with Promotion Code
+    WP->>Dice: Store Promotion Code as Parent
+    Dice->>WP: Save Parent User and Chips Info
+    Parent->>Dice: Trigger Dice Game (Win/Loss)
+    Dice->>WP: Update Parent Points (Win/Loss)
+    Dice->>WP: Check Promotion Code for Validity
+    WP->>Dice: Validate Promotion Code
+    Dice->>Parent: Notify Promotion Code Valid
+    Dice->>Parent: Adjust Points and Chips Based on Game Result
+```
+
+Child User Sequence Diagram:
+
+```mermaid
+sequenceDiagram
+    participant Child as Child User
+    participant WP as WordPress Database
+    participant Dice as Dice Game Logic
+
+    Child->>WP: Submit Username and Promotion Code
+    WP->>Dice: Check for Parent User by Promotion Code
+    Dice->>WP: Retrieve Parent User (from Promo Code)
+    WP->>Child: Return Parent User Info
+    Child->>WP: Deduct Chips (if Not Promotion User)
+    Dice->>WP: Deduct Chips for Parent/Child Users (Win/Loss)
+    Dice->>Child: Notify Participation and Points Update
+    Child->>Dice: Trigger Dice Game (Win/Loss)
+    Dice->>WP: Update Points (Win/Loss for Child)
+    Dice->>Child: Notify Points and Chips After Game
+```
+
+## Promotion Code Validation API
+
+Validates a promotion code and associates the parent user with the promotion code.
+
+### Endpoint
+
+`POST /chubgame/v1/validate`
+
+### Parameters
+
+- `promotionCode` (string): The promotion code to validate.
+- `username` (string): The username of the child user.
+
+### Response
+
+#### Success
 
 ```json
 {
-    "promotionCode": "string",
-    "username": "string"
+    "code": 200,
+    "message": "Promotion code is valid and successfully applied.",
+    "data": {
+        "status": "success",
+        "valid": true,
+        "parent_user_id": 123
+    }
 }
 ```
 
-**Response:**
-
-- **200 OK**: If the promotion code is valid.
-
-  ```json
-  {
-      "valid": true
-  }
-  ```
-
-- **400 Bad Request**: If the promotion code is invalid.
-
-  ```json
-  {
-      "valid": false,
-      "error": "Invalid promotion code"
-  }
-  ```
-
-### Send Dice Data
-
-This endpoint sends the dice data to the backend.
-
-**Endpoint:**
-
-```text
-POST /wp-json/dice-roller/v1/send
-```
-
-**Request Body:**
+#### Error
 
 ```json
 {
-    "diceAmount": "integer",
-    "totalPoints": "integer",
-    "promotionCode": "string",
-    "isPromotionUser": "boolean",
-    "username": "string",
-    "chips": "integer"
+    "code": 400,
+    "message": "Invalid promotion code",
+    "data": {
+        "status": "invalid_promotion_code"
+    }
 }
 ```
 
-**Response:**
+## Balance Validation API
 
-- **200 OK**: If the data is successfully processed.
+Checks if the user has sufficient balance for the specified chips.
 
-  ```json
-  {
-      "success": true
-  }
-  ```
+### Endpoint
 
-- **400 Bad Request**: If there is an error processing the data.
+`POST /chubgame/v1/check-balance`
 
-  ```json
-  {
-      "error": "Error message"
-  }
-  ```
+### Parameters
+
+- `username` (string): The username of the user.
+- `chips` (int): The number of chips to check.
+
+### Response
+
+#### Success
+
+```json
+{
+    "code": 200,
+    "message": "Balance is sufficient for current user",
+    "data": {
+        "status": "success",
+        "balance": 1000
+    }
+}
+```
+
+#### Error
+
+```json
+{
+    "code": 400,
+    "message": "Insufficient balance for parent user",
+    "data": {
+        "status": "insufficient_balance",
+        "balance": 500
+    }
+}
+```
+
+## Dice Data and Manage Chips API
+
+Handles the dice game data and manages the chips for parent and child users.
+
+### Endpoint
+
+`POST /chubgame/v1/send`
+
+### Parameters
+
+- `diceAmount` (int): The amount of dice rolled.
+- `totalPoints` (int): The total points scored.
+- `promotionCode` (string): The promotion code used.
+- `isPromotionUser` (bool): Indicates if the user is a promotion user.
+- `username` (string): The username of the user.
+- `chips` (int): The number of chips of the current user.
+
+### Response
+
+#### Success
+
+```json
+{
+    "code" => 200,
+    "message" => "Game processed successfully",
+    "data" => {
+        "status" => "success",
+        "balance" => 1000
+    }
+}
+```
+
+#### Error
+
+```json
+{
+    "code": 400,
+    "message": "This promotion code has already been used",
+    "data": {
+        "status": "promotion_used"
+    }
+}
+```
 
 ## Milestone
 

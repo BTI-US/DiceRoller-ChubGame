@@ -60,6 +60,7 @@ jobs:
         env:
           VITE_VALIDATE_PROMOTION_CODE_API: ${{ secrets.VITE_VALIDATE_PROMOTION_CODE_API || 'https://chubgame.com/wp-json/chubgame/v1/validate' }}
           VITE_SEND_DICE_DATA_API: ${{ secrets.VITE_SEND_DICE_DATA_API || 'https://chubgame.com/wp-json/chubgame/v1/send' }}
+          VITE_CHECK_BALANCE_API: ${{ secrets.VITE_CHECK_BALANCE_API || 'https://chubgame.com/wp-json/chubgame/v1/check-balance' }}
           VITE_MAX_DICE_AMOUNT: ${{ secrets.VITE_MAX_DICE_AMOUNT || 10 }}
         run: npm run build
 

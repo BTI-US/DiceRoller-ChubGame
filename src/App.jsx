@@ -13,6 +13,7 @@ import { FaCopy, FaInfoCircle, FaCoins, FaArrowLeft, FaPlay, FaForward, FaTimes,
 
 const VALIDATE_PROMOTION_CODE_API = import.meta.env.VITE_VALIDATE_PROMOTION_CODE_API;
 const SEND_DICE_DATA_API = import.meta.env.VITE_SEND_DICE_DATA_API;
+const CHECK_BALANCE_API = import.meta.env.VITE_CHECK_BALANCE_API;
 const MAX_DICE_AMOUNT = parseInt(import.meta.env.VITE_MAX_DICE_AMOUNT, 10);  // Parsing as an integer
 
 const App = () => {
@@ -129,7 +130,7 @@ const App = () => {
         setShowChipsDialog(true);
     };
 
-    // TODO: We need to add the api endpoint in the wordpress backend
+    // We need to add the api endpoint in the wordpress backend
     const sendDiceData = async (diceAmount, totalPoints, promotionCode, isPromotionUser, chips) => {
         try {
             const response = await fetch(SEND_DICE_DATA_API, {
@@ -148,22 +149,23 @@ const App = () => {
             });
             const data = await response.json();
             if (!response.ok) {
-                throw new Error(data.error || 'Error sending data');
+                return { success: false, message: data.message || 'Error sending data' };
             }
             console.log('Response from backend:', data);
+            return { success: true, data };
         } catch (error) {
             console.error('Error sending data to backend:', error);
-            throw error;
+            return { success: false, message: error.message || 'Error sending data' };
         }
     };
 
     const validatePromotionCode = async (code) => {
         const regex = /^[a-zA-Z0-9]{16}$/;
         if (!code) {
-            return 'Promotion code cannot be empty';
+            return { valid: false, message: 'Promotion code is required' };
         }
         if (!regex.test(code)) {
-            return 'Promotion code must be 16 characters long and contain only letters and numbers';
+            return { valid: false, message: 'Promotion code must be 16 characters long and contain only letters and numbers' };
         }
 
         try {
@@ -176,21 +178,23 @@ const App = () => {
             });
             const data = await response.json();
             if (!response.ok) {
-                throw new Error(data.error || 'Error validating promotion code');
+                return { valid: false, message: data.message || 'Error validating promotion code' };
             }
-            if (!data.valid) {
-                return 'Invalid promotion code';
+            if (data.message != 'success' && !data.data.valid) {
+                return { valid: false, message: 'Invalid promotion code' };
             }
+            console.log('Response from backend:', data);
+            return { valid: true };
         } catch (error) {
             console.error('Error validating promotion code:', error);
-            return 'Error validating promotion code';
+            return { valid: false, message: 'Error validating promotion code' };
         }
-        return '';
     };
 
     const handleSubmitPromotion = async () => {
-        const error = await validatePromotionCode(promotionCode);
-        if (error) {
+        const result = await validatePromotionCode(promotionCode);
+        if (!result.valid) {
+            console.error('Error validating promotion code:', result.message);
             setErrorPopup(error);
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
             return;
@@ -200,24 +204,55 @@ const App = () => {
         setShowChipsDialog(true);
     };
 
-    const handlePlay = () => {
+    const validateAccountBalance = async (username, chips) => {
+        try {
+            const response = await fetch(CHECK_BALANCE_API, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, chips }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                return { valid: false, message: data.message || 'Error checking balance' };
+            }
+            if (data.data.status !== 'success') {
+                return { valid: false, message: 'Insufficient balance' };
+            }
+            console.log('Response from backend:', data);
+            return { valid: true, balance: data.data.balance };
+        } catch (error) {
+            console.error('Error checking balance:', error);
+            return { valid: false, message: 'Error checking balance' };
+        }
+    };
+
+    const handlePlay = async () => {
+        const chips = selectedChips || customChips;
+        const result = await validateAccountBalance(username, chips);
+        if (!result.valid) {
+            console.error(result.message);
+            setErrorPopup(result.message);
+            return;
+        }
         setShowChipsDialog(false);
         // Start the game with the selected/customized chips
-        console.log('Selected Chips:', selectedChips || customChips);
+        console.log('Selected Chips:', chips);
     };
 
     const handleGenerate = async () => {
-        try {
-            // Determine the chips to use
-            const chips = customChips !== '' ? parseInt(customChips, 10) : parseInt(selectedChips, 10);
-            await sendDiceData(diceAmount, totalPoints, promotionCode, true, chips);
-            setSuccessPopup('Promotion code submitted successfully');
-            setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
-        } catch (error) {
-            console.error('Error saving promotion code:', error);
-            setErrorPopup('Error saving promotion code');
+        // Determine the chips to use
+        const chips = customChips !== '' ? parseInt(customChips, 10) : parseInt(selectedChips, 10);
+        const result = await sendDiceData(diceAmount, totalPoints, promotionCode, true, username, chips);
+        if (!result.success) {
+            console.error('Error saving promotion code:', result.message);
+            setErrorPopup(result.message);
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
+            return;
         }
+        setSuccessPopup('Promotion code submitted successfully');
+        setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
     };
 
     const handleSubmit = async () => {
@@ -228,17 +263,17 @@ const App = () => {
     };
 
     const handleSave = async () => {
-        try {
-            // Determine the chips to use
-            const chips = customChips !== '' ? parseInt(customChips, 10) : parseInt(selectedChips, 10);
-            await sendDiceData(diceAmount, totalPoints, promotionCode, false, chips);
-            setSuccessPopup('Promotion code submitted successfully');
-            setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
-        } catch (error) {
+        // Determine the chips to use
+        const chips = customChips !== '' ? parseInt(customChips, 10) : parseInt(selectedChips, 10);
+        const result = await sendDiceData(diceAmount, totalPoints, promotionCode, false, chips);
+        if (!result.success) {
             console.error('Error submitting promotion code:', error);
             setErrorPopup('Error submitting promotion code');
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
+            return;
         }
+        setSuccessPopup('Promotion code submitted successfully');
+        setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
     };
 
     const closePopup = () => {
@@ -397,7 +432,7 @@ const App = () => {
                         >
                             <FaTimes />
                         </button>
-                        <h2 className="text-2xl font-bold mb-4">Dice Regulation</h2>
+                        <h2 className="text-2xl font-bold mb-4">Game Regulation</h2>
                         <div className="text-left">
                             <div className="mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700">
                                 <p className="font-bold">Objective:</p>
