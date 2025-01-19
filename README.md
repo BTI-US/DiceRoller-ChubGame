@@ -1,16 +1,16 @@
-# DiceRollerSimulator-Three
+# DiceRoller-ChubGame
 
-[![Deploy static content to Pages](https://github.com/BTI-US/DiceRollerSimulator-ThreeJS/actions/workflows/static.yml/badge.svg?branch=main)](https://github.com/BTI-US/DiceRollerSimulator-ThreeJS/actions/workflows/static.yml)
+[![Deploy static content to Pages](https://github.com/BTI-US/DiceRoller-ChubGame/actions/workflows/static.yml/badge.svg?branch=main)](https://github.com/BTI-US/DiceRoller-ChubGame/actions/workflows/static.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- Last Modified: 2025-01-05
+- Last Modified: 2025-01-19
 - Author: Phill Weston
 
 ![screenshot](images/diceRollerSimulator0.jpg)
 
-A 3D dice simulator built on Three.js, utilizing Cannon.js as the physics engine, allowing users to control the number of the dices.
+A 3D dice simulator built on Three.js, utilizing Cannon.js as the physics engine, allowing users to control the number of the dices. This dice game is the first game developed by ChubGame.
 
-Now you can find a live version at [here](https://dice,chubgame.com/).
+Now you can find a live version at [here](https://dice.chubgame.com/).
 
 ## Features
 
@@ -48,7 +48,7 @@ Now you can find a live version at [here](https://dice,chubgame.com/).
 ### Clone the repository
 
 ```shell
-git clone https://github.com/BTI-US/DiceRollerSimulator-ThreeJS.git
+git clone https://github.com/BTI-US/DiceRoller-ChubGame.git
 ```
 
 ### Install packages
@@ -69,6 +69,7 @@ npm run dev
 |-|-|-|
 |`VITE_VALIDATE_PROMOTION_CODE_API`|API endpoint to validate promotion code|`https://chubgame.com/wp-json/chubgame/v1/validate`|
 |`VITE_SEND_DICE_DATA_API`|API endpoint to send dice data|`https://chubgame.com/wp-json/chubgame/v1/send`|
+|`VITE_CHECK_BALANCE_API`|API Endpoint to check the user balance|`https://chubgame.com/wp-json/chubgame/v1/check-balance`|
 |`VITE_MAX_DICE_AMOUNT`|Maximum number of dice allowed|`10`|
 
 ## WordPress API Endpoints

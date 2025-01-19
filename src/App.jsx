@@ -9,7 +9,7 @@
  */
 import { useState, useEffect } from 'react';
 import { createDices } from './3d.js';
-import { FaCopy, FaInfoCircle, FaCoins, FaArrowLeft, FaPlay, FaForward, FaTimes, FaCheck, FaSave } from 'react-icons/fa';
+import { FaCopy, FaInfoCircle, FaCoins, FaArrowLeft, FaPlay, FaForward, FaTimes, FaCheck, FaSave, FaBook } from 'react-icons/fa';
 
 const VALIDATE_PROMOTION_CODE_API = import.meta.env.VITE_VALIDATE_PROMOTION_CODE_API;
 const SEND_DICE_DATA_API = import.meta.env.VITE_SEND_DICE_DATA_API;
@@ -17,10 +17,11 @@ const CHECK_BALANCE_API = import.meta.env.VITE_CHECK_BALANCE_API;
 const MAX_DICE_AMOUNT = parseInt(import.meta.env.VITE_MAX_DICE_AMOUNT, 10);  // Parsing as an integer
 
 const App = () => {
+    const [showWelcomeDialog, setShowWelcomeDialog] = useState(true);
     const [diceAmount, setDiceAmount] = useState(6);
     const [totalPoints, setTotalPoints] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
-    const [showPromotionDialog, setShowPromotionDialog] = useState(true);
+    const [showPromotionDialog, setShowPromotionDialog] = useState(false);
     const [promotionCode, setPromotionCode] = useState('');
     const [promotionSkipped, setPromotionSkipped] = useState(false);
     const [successPopup, setSuccessPopup] = useState('');
@@ -47,6 +48,11 @@ const App = () => {
             setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
         }
     }, []);
+    
+    const handleStart = () => {
+        setShowWelcomeDialog(false);
+        setShowPromotionDialog(true);
+    };
 
     const handleOpenRegulation = () => {
         setShowRegulationDialog(true);
@@ -294,6 +300,47 @@ const App = () => {
 
     return (
         <div className="font-['Cherry_Bomb_One',system-ui] select-none">
+            {showWelcomeDialog && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                        <h2 className="text-xl mb-4">Welcome to ChubGame!</h2>
+                        <p className="text-xl mb-4">Get ready to play the exciting 3D dice game and earn your chips!</p>
+                        <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 flex items-center">
+                            <FaInfoCircle className="mr-2" />
+                            <p>Click the following button to read our game regulation and our policy.</p>
+                        </div>
+                        <div className="flex justify-center space-x-4 mb-4">
+                            <button
+                                onClick={handleOpenRegulation}
+                                className="px-4 py-2 bg-gray-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaBook className="mr-2" /> Game Regulation
+                            </button>
+                            <button
+                                onClick={handleOpenAbout}
+                                className="px-4 py-2 bg-gray-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaInfoCircle className="mr-2" /> About ChubGame
+                            </button>
+                        </div>
+                        <div className="mt-4 flex justify-center space-x-4">
+                            <button
+                                onClick={() => window.close()}
+                                className="px-4 py-2 bg-red-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaTimes className="mr-2" /> Close
+                            </button>
+                            <button
+                                onClick={handleStart}
+                                className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaPlay className="mr-2" /> Start
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showPromotionDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
