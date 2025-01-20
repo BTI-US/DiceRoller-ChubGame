@@ -366,6 +366,15 @@ const App = () => {
                         </div>
                         <div className="flex justify-center space-x-4">
                             <button
+                                onClick={() => {
+                                    setShowPromotionDialog(false);
+                                    setShowWelcomeDialog(true);
+                                }}
+                                className="mr-2 px-4 py-2 bg-gray-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaArrowLeft className="mr-2" /> Back
+                            </button>
+                            <button
                                 onClick={handleSkipPromotion}
                                 className="mr-2 px-4 py-2 bg-gray-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
@@ -373,7 +382,7 @@ const App = () => {
                             </button>
                             <button
                                 onClick={handleSubmitPromotion}
-                                className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                                className="mr-2 px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
                                 <FaPlay className="mr-2" /> Start
                             </button>
@@ -389,21 +398,27 @@ const App = () => {
                         <div className="mb-4 flex">
                             <button
                                 onClick={() => setSelectedChips('10')}
-                                className={`mr-2 px-6 py-2 rounded ${selectedChips === '10' ? 'bg-green-500' : 'bg-gray-500'} text-white transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 flex items-center`}
+                                className={`mr-2 px-6 py-2 rounded ${selectedChips === '10' ? 'bg-red-500' : 'bg-gray-500'} text-white transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 flex items-center`}
                             >
                                 <FaCoins className="mr-2" /> 10
                             </button>
                             <button
-                                onClick={() => setSelectedChips('20')}
-                                className={`mr-2 px-6 py-2 rounded ${selectedChips === '20' ? 'bg-green-500' : 'bg-gray-500'} text-white transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 flex items-center`}
+                                onClick={() => setSelectedChips('25')}
+                                className={`mr-2 px-6 py-2 rounded ${selectedChips === '25' ? 'bg-green-500' : 'bg-gray-500'} text-white transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 flex items-center`}
                             >
-                                <FaCoins className="mr-2" /> 20
+                                <FaCoins className="mr-2" /> 25
                             </button>
                             <button
                                 onClick={() => setSelectedChips('50')}
-                                className={`mr-2 px-6 py-2 rounded ${selectedChips === '50' ? 'bg-green-500' : 'bg-gray-500'} text-white transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 flex items-center`}
+                                className={`mr-2 px-6 py-2 rounded ${selectedChips === '50' ? 'bg-blue-500' : 'bg-gray-500'} text-white transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 flex items-center`}
                             >
                                 <FaCoins className="mr-2" /> 50
+                            </button>
+                            <button
+                                onClick={() => setSelectedChips('100')}
+                                className={`mr-2 px-6 py-2 rounded ${selectedChips === '100' ? 'bg-black' : 'bg-gray-500'} text-white transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 flex items-center`}
+                            >
+                                <FaCoins className="mr-2" /> 100
                             </button>
                         </div>
                         <input
