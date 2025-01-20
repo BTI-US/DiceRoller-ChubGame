@@ -225,7 +225,7 @@ Handles the dice game data and manages the chips for parent and child users.
 
 - `diceAmount` (int): The amount of dice rolled.
 - `totalPoints` (int): The total points scored.
-- `promotionCode` (string): The promotion code used.
+- `promotionCode` (string): Optional: The promotion code used, if empty, then the user is in the PvE mode.
 - `isPromotionUser` (bool): Indicates if the user is a promotion user.
 - `username` (string): The username of the user.
 - `chips` (int): The number of chips of the current user.

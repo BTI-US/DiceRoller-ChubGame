@@ -20,10 +20,11 @@ const App = () => {
     const [showWelcomeDialog, setShowWelcomeDialog] = useState(true);
     const [diceAmount, setDiceAmount] = useState(6);
     const [totalPoints, setTotalPoints] = useState(null);
-    const [showPopup, setShowPopup] = useState(false);
+    const [showTotalPointsDialog, setShowTotalPointsDialog] = useState(false);
     const [showPromotionDialog, setShowPromotionDialog] = useState(false);
     const [promotionCode, setPromotionCode] = useState('');
     const [promotionSkipped, setPromotionSkipped] = useState(false);
+    const [singlePlayer, setSinglePlayer] = useState(false);
     const [successPopup, setSuccessPopup] = useState('');
     const [errorPopup, setErrorPopup] = useState('');
     const [warnPopup, setWarnPopup] = useState('');
@@ -37,6 +38,9 @@ const App = () => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0});
     const [showRegulationDialog, setShowRegulationDialog] = useState(false);
     const [showAboutDialog, setShowAboutDialog] = useState(false);
+    const [showResultDialog, setShowResultDialog] = useState(false);
+    const [resultData, setResultData] = useState(null);
+    const [showFinalDialog, setShowFinalDialog] = useState(false);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -48,8 +52,15 @@ const App = () => {
             setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
         }
     }, []);
+
+    const handleStartPvE = () => {
+        setSinglePlayer(true);
+        setShowWelcomeDialog(false);
+        setShowChipsDialog(true);
+    };
     
-    const handleStart = () => {
+    const handleStartPvP = () => {
+        setSinglePlayer(false);
         setShowWelcomeDialog(false);
         setShowPromotionDialog(true);
     };
@@ -68,6 +79,28 @@ const App = () => {
 
     const handleCloseAbout = () => {
         setShowAboutDialog(false);
+    };
+
+    const handleShowResult = async () => {
+        // Determine the chips to use
+        const chips = customChips !== '' ? parseInt(customChips, 10) : parseInt(selectedChips, 10);
+        var result;
+        if (singlePlayer) {
+            result = await sendDiceData(diceAmount, totalPoints, '', false, chips);
+        } else {
+            result = await sendDiceData(diceAmount, totalPoints, promotionCode, true, chips);
+        }
+        if (!result.success) {
+            console.error('Error submitting game result:', result.message);
+            setErrorPopup(result.message);
+            setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
+            return;
+        }
+        setResultData(result.data); // Store the result data
+        setSuccessPopup('Promotion code submitted successfully');
+        setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
+        setShowTotalPointsDialog(false);
+        setShowResultDialog(true);
     };
 
     // Generate a random promotion code when the component mounts
@@ -120,7 +153,7 @@ const App = () => {
             if (points && Array.isArray(points)) {
                 const total = points.reduce((acc, point) => acc + point, 0);
                 setTotalPoints(total);
-                setShowPopup(true);
+                setShowTotalPointsDialog(true);
             } else {
                 console.error('createDices did not return an array of points');
             }
@@ -130,7 +163,6 @@ const App = () => {
     };
 
     const handleSkipPromotion = () => {
-        generatePromotionCode();
         setPromotionSkipped(true);
         setShowPromotionDialog(false);
         setShowChipsDialog(true);
@@ -201,7 +233,7 @@ const App = () => {
         const result = await validatePromotionCode(promotionCode);
         if (!result.valid) {
             console.error('Error validating promotion code:', result.message);
-            setErrorPopup(error);
+            setErrorPopup(result.message);
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
             return;
         }
@@ -240,6 +272,7 @@ const App = () => {
         if (!result.valid) {
             console.error(result.message);
             setErrorPopup(result.message);
+            setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
             return;
         }
         setShowChipsDialog(false);
@@ -259,31 +292,20 @@ const App = () => {
         }
         setSuccessPopup('Promotion code submitted successfully');
         setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
+        setShowCopyDialog(false);
+        setShowFinalDialog(true);
     };
 
-    const handleSubmit = async () => {
+    const handleGenerateCode = async () => {
+        generatePromotionCode();
         setSuccessPopup('Copy the promotion code to use it again');
         setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
-        setShowPopup(false);
+        setShowTotalPointsDialog(false);
         setShowCopyDialog(true);
     };
 
-    const handleSave = async () => {
-        // Determine the chips to use
-        const chips = customChips !== '' ? parseInt(customChips, 10) : parseInt(selectedChips, 10);
-        const result = await sendDiceData(diceAmount, totalPoints, promotionCode, false, chips);
-        if (!result.success) {
-            console.error('Error submitting promotion code:', error);
-            setErrorPopup('Error submitting promotion code');
-            setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
-            return;
-        }
-        setSuccessPopup('Promotion code submitted successfully');
-        setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
-    };
-
     const closePopup = () => {
-        setShowPopup(false);
+        setShowTotalPointsDialog(false);
     };
 
     const handleCopyPromotionCode = async () => {
@@ -331,10 +353,16 @@ const App = () => {
                                 <FaTimes className="mr-2" /> Close
                             </button>
                             <button
-                                onClick={handleStart}
+                                onClick={handleStartPvE}
+                                className="px-4 py-2 bg-green-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaPlay className="mr-2" /> Start PvE
+                            </button>
+                            <button
+                                onClick={handleStartPvP}
                                 className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
-                                <FaPlay className="mr-2" /> Start
+                                <FaPlay className="mr-2" /> Start PvP
                             </button>
                         </div>
                     </div>
@@ -611,7 +639,7 @@ const App = () => {
                 </div>
             </div>
 
-            {showPopup && (
+            {showTotalPointsDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
                         <p className="text-xl">Total Points: {totalPoints}</p>
@@ -622,23 +650,69 @@ const App = () => {
                             >
                                 <FaTimes className="mr-2" /> Close
                             </button>
-                            {promotionSkipped ? (
-                                // If the promotion was skipped, show the submit button
+                            {singlePlayer ? (
                                 <button
-                                    onClick={handleSubmit}
+                                    onClick={handleShowResult}
                                     className="px-4 py-2 bg-green-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                                 >
-                                    <FaCheck className="mr-2" /> Generate
+                                    <FaSave className="mr-2" /> Show Result
                                 </button>
                             ) : (
-                                // If the promotion was not skipped, show the save button
-                                <button
-                                    onClick={handleSave}
-                                    className="px-4 py-2 bg-green-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
-                                >
-                                    <FaSave className="mr-2" /> Save
-                                </button>
+                                promotionSkipped ? (
+                                    <button
+                                        onClick={handleGenerateCode}
+                                        className="px-4 py-2 bg-green-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                                    >
+                                        <FaCheck className="mr-2" /> Generate Promotion Code
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleShowResult}
+                                        className="px-4 py-2 bg-green-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                                    >
+                                        <FaSave className="mr-2" /> Show Result
+                                    </button>
+                                )
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showResultDialog && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                        <h2 className="text-xl mb-4">Game Result</h2>
+                        {resultData && (
+                            <>
+                                {resultData.result > 0 ? (
+                                    <p className="mb-4 text-green-500 flex items-center">
+                                        <FaCoins className="mr-2" /> You WIN: {resultData.result} points
+                                    </p>
+                                ) : (
+                                    <p className="mb-4 text-red-500 flex items-center">
+                                        <FaCoins className="mr-2" /> You LOST: {Math.abs(resultData.result)} points
+                                    </p>
+                                )}
+                                <p className="mb-4">Your current balance is: {resultData.balance}</p>
+                            </>
+                        )}
+                        <div className="mt-4 flex justify-center space-x-4">
+                            <button
+                                onClick={() => window.close()}
+                                className="px-4 py-2 bg-red-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaTimes className="mr-2" /> Close
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowResultDialog(false);
+                                    showWelcomeDialog(true);
+                                }}
+                                className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaRedo className="mr-2" /> Play Again
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -678,7 +752,7 @@ const App = () => {
                             <button
                                 onClick={() => {
                                     setShowCopyDialog(false);
-                                    setShowPopup(true);
+                                    setShowTotalPointsDialog(true);
                                 }}
                                 className="px-4 py-2 bg-gray-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
@@ -689,6 +763,31 @@ const App = () => {
                                 className="px-4 py-2 bg-green-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
                                 <FaCheck className="mr-2" /> Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showFinalDialog && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                        <h2 className="text-xl mb-4">Promotion Code Generated</h2>
+                        <div className="mt-4 flex justify-center space-x-4">
+                            <button
+                                onClick={() => window.close()}
+                                className="px-4 py-2 bg-red-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaTimes className="mr-2" /> Close
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowFinalDialog(false);
+                                    showWelcomeDialog(true);
+                                }}
+                                className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaRedo className="mr-2" /> Play Again
                             </button>
                         </div>
                     </div>
