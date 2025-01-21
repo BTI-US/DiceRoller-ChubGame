@@ -9,7 +9,9 @@
  */
 import { useState, useEffect } from 'react';
 import { createDices } from './3d.js';
-import { FaCopy, FaInfoCircle, FaCoins, FaArrowLeft, FaPlay, FaForward, FaTimes, FaCheck, FaSave, FaBook } from 'react-icons/fa';
+import { FaCopy, FaInfoCircle, FaCoins, FaArrowLeft, FaPlay, FaForward, FaTimes, FaCheck, FaSave, FaBook, FaRedo } from 'react-icons/fa';
+
+const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === 'true';
 
 const VALIDATE_PROMOTION_CODE_API = import.meta.env.VITE_VALIDATE_PROMOTION_CODE_API;
 const SEND_DICE_DATA_API = import.meta.env.VITE_SEND_DICE_DATA_API;
@@ -55,6 +57,8 @@ const App = () => {
     }, []);
 
     const handleStartPvE = () => {
+        setSuccessPopup('Starting PvE game...');
+        setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
         setSinglePlayer(true);
         setShowWelcomeDialog(false);
         setShowChipsDialog(true);
@@ -120,15 +124,15 @@ const App = () => {
         setShowResultDialog(true);
     };
 
-    // Generate a random promotion code when the component mounts
-    const generatePromotionCode = () => {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let code = '';
-        for (let i = 0; i < 16; i++) {
-            code += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-        setPromotionCode(code);
-    };
+    // (Deprecated) Generate a random promotion code when the component mounts
+    // const generatePromotionCode = () => {
+    //     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    //     let code = '';
+    //     for (let i = 0; i < 16; i++) {
+    //         code += characters.charAt(Math.floor(Math.random() * characters.length));
+    //     }
+    //     setPromotionCode(code);
+    // };
 
     const handleMouseEnter = (e) => {
         setMousePosition({ x: e.clientX, y: e.clientY });
@@ -179,14 +183,22 @@ const App = () => {
         }
     };
 
-    const handleSkipPromotion = () => {
-        setPromotionSkipped(true);
-        setShowPromotionDialog(false);
-        setShowChipsDialog(true);
-    };
-
     // We need to add the api endpoint in the wordpress backend
     const sendDiceData = async (diceAmount, totalPoints, promotionCode, isPromotionUser, chips) => {
+        if (DEBUG_MODE) {
+            // Simulate a successful response in debug mode
+            console.log('Debug mode: Simulating API response');
+            return {
+                success: true,
+                data: {
+                    status: 'success',
+                    balance: 1000, // Example balance
+                    result: totalPoints > 50 ? 100 : -50, // Example result based on totalPoints
+                    promotion_code: promotionCode || 'DEBUGCODE1234567' // Example promotion code
+                }
+            };
+        }
+
         try {
             const response = await fetch(SEND_DICE_DATA_API, {
                 method: 'POST',
@@ -207,7 +219,7 @@ const App = () => {
                 return { success: false, message: data.message || 'Error sending data' };
             }
             console.log('Response from backend:', data);
-            return { success: true, data };
+            return { success: true, data: data.data };
         } catch (error) {
             console.error('Error sending data to backend:', error);
             return { success: false, message: error.message || 'Error sending data' };
@@ -221,6 +233,12 @@ const App = () => {
         }
         if (!regex.test(code)) {
             return { valid: false, message: 'Promotion code must be 16 characters long and contain only letters and numbers' };
+        }
+
+        if (DEBUG_MODE) {
+            // Simulate a successful validation in debug mode
+            console.log('Debug mode: Simulating promotion code validation');
+            return { valid: true };
         }
 
         try {
@@ -254,12 +272,20 @@ const App = () => {
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
             return;
         }
+        setSuccessPopup('Promotion code validated successfully');
+        setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
         setPromotionSkipped(false);
         setShowPromotionDialog(false);
         setShowChipsDialog(true);
     };
 
     const validateAccountBalance = async (username, chips) => {
+        if (DEBUG_MODE) {
+            // Simulate a successful balance validation in debug mode
+            console.log('Debug mode: Simulating account balance validation');
+            return { valid: true, balance: 1000 }; // Example balance
+        }
+
         try {
             const response = await fetch(CHECK_BALANCE_API, {
                 method: 'POST',
@@ -297,32 +323,29 @@ const App = () => {
         console.log('Selected Chips:', chips);
     };
 
-    const handleGenerate = async () => {
+    const sendDataToBackend = async () => {
         // Determine the chips to use
         const chips = customChips !== '' ? parseInt(customChips, 10) : parseInt(selectedChips, 10);
-        const result = await sendDiceData(diceAmount, totalPoints, promotionCode, true, username, chips);
+        const result = await sendDiceData(diceAmount, totalPoints, '', true, username, chips);
         if (!result.success) {
             console.error('Error saving promotion code:', result.message);
             setErrorPopup(result.message);
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
-            return;
+            return 'Promotion Code Not Available';
         }
         setSuccessPopup('Promotion code submitted successfully');
         setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
-        setShowCopyDialog(false);
-        setShowFinalDialog(true);
+        return result.data.promotion_code;
     };
 
     const handleGenerateCode = async () => {
-        generatePromotionCode();
+        //generatePromotionCode();        // TODO: Marked as deprecated
+        const promotion_code = await sendDataToBackend();
+        setPromotionCode(promotion_code);
         setSuccessPopup('Copy the promotion code to use it again');
         setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
         setShowTotalPointsDialog(false);
         setShowCopyDialog(true);
-    };
-
-    const closePopup = () => {
-        setShowTotalPointsDialog(false);
     };
 
     const handleCopyPromotionCode = async () => {
@@ -334,6 +357,21 @@ const App = () => {
             console.error('Error copying promotion code:', error);
             setErrorPopup('Error copying promotion code');
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
+        }
+    };
+
+    const handleChipsSelection = () => {
+        const customChipsValue = parseInt(customChips, 10);
+        if (!selectedChips && !customChips) {
+            setErrorPopup('You need to select or enter the chip amounts');
+            setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
+        } else if (customChips && (customChipsValue > 100 || customChipsValue < 10)) {
+            setWarnPopup('Custom chips must be between 10 and 100');
+            setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
+        } else {
+            setSuccessPopup('Chips selected successfully, game will be started');
+            setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
+            handlePlay();
         }
     };
 
@@ -420,7 +458,11 @@ const App = () => {
                                 <FaArrowLeft className="mr-2" /> Back
                             </button>
                             <button
-                                onClick={handleSkipPromotion}
+                                onClick={() => {
+                                    setPromotionSkipped(true);
+                                    setShowPromotionDialog(false);
+                                    setShowChipsDialog(true);
+                                }}
                                 className="mr-2 px-4 py-2 bg-gray-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
                                 <FaForward className="mr-2" /> Skip
@@ -499,18 +541,7 @@ const App = () => {
                                 <FaArrowLeft className="mr-2" /> Back
                             </button>
                             <button
-                                onClick={() => {
-                                    const customChipsValue = parseInt(customChips, 10);
-                                    if (!selectedChips && !customChips) {
-                                        setErrorPopup('You need to select or enter the chip amounts');
-                                        setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
-                                    } else if (customChips && (customChipsValue > 100 || customChipsValue < 10)) {
-                                        setWarnPopup('Custom chips must be between 10 and 100');
-                                        setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
-                                    } else {
-                                        handlePlay();
-                                    }
-                                }}
+                                onClick={handleChipsSelection}
                                 className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
                                 <FaPlay className="mr-2" /> Play
@@ -666,7 +697,7 @@ const App = () => {
                         <p className="text-xl">Total Points: {totalPoints}</p>
                         <div className="mt-4 flex justify-center space-x-4">
                             <button
-                                onClick={closePopup}
+                                onClick={() => setShowTotalPointsDialog(false)}
                                 className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
                                 <FaTimes className="mr-2" /> Close
@@ -728,7 +759,7 @@ const App = () => {
                             <button
                                 onClick={() => {
                                     setShowResultDialog(false);
-                                    showWelcomeDialog(true);
+                                    setShowWelcomeDialog(true);
                                 }}
                                 className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
@@ -780,7 +811,10 @@ const App = () => {
                                 <FaArrowLeft className="mr-2" /> Back
                             </button>
                             <button
-                                onClick={handleGenerate}
+                                onClick={() => {
+                                    setShowCopyDialog(false);
+                                    setShowFinalDialog(true);
+                                }}
                                 className="px-4 py-2 bg-green-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
                                 <FaCheck className="mr-2" /> Submit
@@ -804,7 +838,7 @@ const App = () => {
                             <button
                                 onClick={() => {
                                     setShowFinalDialog(false);
-                                    showWelcomeDialog(true);
+                                    setShowWelcomeDialog(true);
                                 }}
                                 className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >

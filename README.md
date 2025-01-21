@@ -236,12 +236,13 @@ Handles the dice game data and manages the chips for parent and child users.
 
 ```json
 {
-    "code" => 200,
-    "message" => "Game processed successfully",
-    "data" => {
-        "status" => "success",
-        "balance" => 1000,
-        "result" => 100
+    "code": 200,
+    "message": "Game processed successfully",
+    "data": {
+        "status": "success",
+        "balance": 1000,
+        "result": 100,
+        "promotion_code": "DEBUGCODE1234567"
     }
 }
 ```
@@ -264,6 +265,7 @@ Handles the dice game data and manages the chips for parent and child users.
 - [x] Send the current dice number to the server using HTTP POST
 - [x] Add the promotion code feature
 - [x] Add the chip amount feature
+- [x] Add the PvP and PvE mode
 
 ## License
 

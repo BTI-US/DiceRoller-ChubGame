@@ -463,7 +463,7 @@ function handle_send_dice_data(WP_REST_Request $request) {
     error_log("Received parameters: diceAmount=$dice_amount, totalPoints=$total_points, promotionCode=$promotion_code, isPromotionUser=$is_promotion_user, username=$username, chips=$chips");
 
     // Check if the parameters are provided
-    if (empty($dice_amount) || empty($total_points) || empty($promotion_code) || !isset($is_promotion_user) || empty($username) || empty($chips)) {
+    if (empty($dice_amount) || empty($total_points) || !isset($is_promotion_user) || empty($username) || empty($chips)) {
         // Parameters are missing, return an error
         $error = new WP_Error(400, 'All parameters are required.', array('status' => 'missing_parameters'));
         error_log("Error: Missing parameters");
@@ -479,6 +479,16 @@ function handle_send_dice_data(WP_REST_Request $request) {
     }
     $user_id = $user->ID;
     error_log("User ID: $user_id");
+
+    // Generate a random promotion code if it is empty and the user is a promotion user
+    if (empty($promotion_code) && $is_promotion_user) {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        $promotion_code = '';
+        for ($i = 0; $i < 16; $i++) {
+            $promotion_code .= $characters[rand(0, strlen($characters) - 1)];
+        }
+        error_log("Generated promotion code: $promotion_code");
+    }
 
     // Check if the promotion code has already been used
     $promotion_entry = $wpdb->get_row($wpdb->prepare(
@@ -535,7 +545,8 @@ function handle_send_dice_data(WP_REST_Request $request) {
             'data' => array(
                 'status' => 'success',
                 'balance' => $parent_balance,
-                'result' => -$chips // Negative value for loss
+                'result' => -$chips, // Negative value for loss
+                'promotion_code' => $promotion_code // Include the generated promotion code
             )
         ), 200);
     } else {
@@ -627,7 +638,8 @@ function handle_send_dice_data(WP_REST_Request $request) {
             'data' => array(
                 'status' => 'success',
                 'balance' => $child_balance,
-                'result' => ($winner_user_id === $user_id) ? $winner_chips : -$chips // Positive for win, negative for loss
+                'result' => ($winner_user_id === $user_id) ? $winner_chips : -$chips, // Positive for win, negative for loss
+                'promotion_code' => $promotion_code // Include the generated promotion code
             )
         ), 200);
     }
