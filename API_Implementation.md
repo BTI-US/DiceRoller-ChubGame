@@ -626,7 +626,7 @@ function handle_send_dice_data(WP_REST_Request $request) {
             'message' => 'Game processed successfully',
             'data' => array(
                 'status' => 'success',
-                'balance' => $child_balance
+                'balance' => $child_balance,
                 'result' => ($winner_user_id === $user_id) ? $winner_chips : -$chips // Positive for win, negative for loss
             )
         ), 200);

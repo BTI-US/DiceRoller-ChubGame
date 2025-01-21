@@ -240,7 +240,8 @@ Handles the dice game data and manages the chips for parent and child users.
     "message" => "Game processed successfully",
     "data" => {
         "status" => "success",
-        "balance" => 1000
+        "balance" => 1000,
+        "result" => 100
     }
 }
 ```

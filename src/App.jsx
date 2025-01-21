@@ -2,7 +2,7 @@
  * @Author: Phillweston 2436559745@qq.com
  * @Date: 2025-01-01 22:00:54
  * @LastEditors: Phillweston
- * @LastEditTime: 2025-01-17 14:40:19
+ * @LastEditTime: 2025-01-21 14:40:19
  * @FilePath: \DiceRollerSimulator-ThreeJS\src\App.jsx
  * @Description: 
  * 
@@ -41,6 +41,7 @@ const App = () => {
     const [showResultDialog, setShowResultDialog] = useState(false);
     const [resultData, setResultData] = useState(null);
     const [showFinalDialog, setShowFinalDialog] = useState(false);
+    const [openedFromWelcome, setOpenedFromWelcome] = useState(false);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -67,18 +68,34 @@ const App = () => {
 
     const handleOpenRegulation = () => {
         setShowRegulationDialog(true);
+        if (showWelcomeDialog) {
+            setOpenedFromWelcome(true);
+            setShowWelcomeDialog(false);
+        }
     };
 
     const handleOpenAbout = () => {
         setShowAboutDialog(true);
+        if (showWelcomeDialog) {
+            setOpenedFromWelcome(true);
+            setShowWelcomeDialog(false);
+        }
     };
 
     const handleCloseRegulation = () => {
         setShowRegulationDialog(false);
+        if (openedFromWelcome) {
+            setShowWelcomeDialog(true);
+            setOpenedFromWelcome(false); // Reset the state
+        }
     };
 
     const handleCloseAbout = () => {
         setShowAboutDialog(false);
+        if (openedFromWelcome) {
+            setShowWelcomeDialog(true);
+            setOpenedFromWelcome(false); // Reset the state
+        }
     };
 
     const handleShowResult = async () => {
@@ -471,7 +488,11 @@ const App = () => {
                             <button
                                 onClick={() => {
                                     setShowChipsDialog(false);
-                                    setShowPromotionDialog(true);
+                                    if (singlePlayer) {
+                                        setShowWelcomeDialog(true);
+                                    } else {
+                                        setShowPromotionDialog(true);
+                                    }
                                 }}
                                 className="px-4 py-2 bg-gray-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
