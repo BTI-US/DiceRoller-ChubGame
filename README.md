@@ -155,7 +155,8 @@ Validates a promotion code and associates the parent user with the promotion cod
     "data": {
         "status": "success",
         "valid": true,
-        "parent_user_id": 123
+        "parent_user_id": 123,
+        "parent_dice_amount": 5
     }
 }
 ```

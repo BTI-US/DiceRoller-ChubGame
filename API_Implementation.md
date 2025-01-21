@@ -350,7 +350,8 @@ function handle_validate_promotion_code(WP_REST_Request $request) {
         'data' => array(
             'status' => 'success',
             'valid' => true,
-            'parent_user_id' => $result->user_id
+            'parent_user_id' => $result->user_id,
+            'parent_dice_amount' => $result->dice_amount // Include parent dice amount
         )
     ), 200);
 }

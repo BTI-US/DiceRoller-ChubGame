@@ -17,6 +17,8 @@ const VALIDATE_PROMOTION_CODE_API = import.meta.env.VITE_VALIDATE_PROMOTION_CODE
 const SEND_DICE_DATA_API = import.meta.env.VITE_SEND_DICE_DATA_API;
 const CHECK_BALANCE_API = import.meta.env.VITE_CHECK_BALANCE_API;
 const MAX_DICE_AMOUNT = parseInt(import.meta.env.VITE_MAX_DICE_AMOUNT, 10);  // Parsing as an integer
+const MIN_CHIPS_AMOUNT = parseInt(import.meta.env.VITE_MIN_CHIPS_AMOUNT, 10);  // Parsing as an integer
+const MAX_CHIPS_AMOUNT = parseInt(import.meta.env.VITE_MAX_CHIPS_AMOUNT, 100);  // Parsing as an integer
 
 const App = () => {
     const [showWelcomeDialog, setShowWelcomeDialog] = useState(true);
@@ -148,6 +150,13 @@ const App = () => {
     };
 
     const handleClickAdd = () => {
+        if (!promotionSkipped && !singlePlayer) {
+            console.warn('Cannot add dice when you are the promotion code user');
+            setWarnPopup('Cannot add dice when you are the promotion code user');
+            setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
+            return;
+        }
+
         if (diceAmount < MAX_DICE_AMOUNT) {
             setDiceAmount((d) => d + 1);
         } else {
@@ -158,6 +167,13 @@ const App = () => {
     };
 
     const handleClickSubtract = () => {
+        if (!promotionSkipped && !singlePlayer) {
+            console.warn('Cannot subtract dice when you are the promotion code user');
+            setWarnPopup('Cannot subtract dice when you are the promotion code user');
+            setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
+            return;
+        }
+
         if (diceAmount === 1) {
             console.warn('Minimum dice amount of 1 reached');
             setWarnPopup('Minimum dice amount of 1 reached');
@@ -238,7 +254,7 @@ const App = () => {
         if (DEBUG_MODE) {
             // Simulate a successful validation in debug mode
             console.log('Debug mode: Simulating promotion code validation');
-            return { valid: true };
+            return { valid: true, amount: 5 };
         }
 
         try {
@@ -257,7 +273,7 @@ const App = () => {
                 return { valid: false, message: 'Invalid promotion code' };
             }
             console.log('Response from backend:', data);
-            return { valid: true };
+            return { valid: true, amount: data.data.parent_dice_amount };
         } catch (error) {
             console.error('Error validating promotion code:', error);
             return { valid: false, message: 'Error validating promotion code' };
@@ -265,6 +281,7 @@ const App = () => {
     };
 
     const handleSubmitPromotion = async () => {
+        // TODO:
         const result = await validatePromotionCode(promotionCode);
         if (!result.valid) {
             console.error('Error validating promotion code:', result.message);
@@ -272,7 +289,8 @@ const App = () => {
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
             return;
         }
-        setSuccessPopup('Promotion code validated successfully');
+        setDiceAmount(result.amount);
+        setSuccessPopup(`Promotion code is valid, dice amount set to ${result.amount} which is the same as the parent user`);
         setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
         setPromotionSkipped(false);
         setShowPromotionDialog(false);
@@ -310,7 +328,7 @@ const App = () => {
     };
 
     const handlePlay = async () => {
-        const chips = selectedChips || customChips;
+        const chips = customChips !== '' ? parseInt(customChips, 10) : parseInt(selectedChips, 10);
         const result = await validateAccountBalance(username, chips);
         if (!result.valid) {
             console.error(result.message);
@@ -365,11 +383,12 @@ const App = () => {
         if (!selectedChips && !customChips) {
             setErrorPopup('You need to select or enter the chip amounts');
             setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
-        } else if (customChips && (customChipsValue > 100 || customChipsValue < 10)) {
-            setWarnPopup('Custom chips must be between 10 and 100');
+        } else if (customChips && (customChipsValue > MAX_CHIPS_AMOUNT || customChipsValue < MIN_CHIPS_AMOUNT)) {
+            setWarnPopup(`Custom chips must be between ${MIN_CHIPS_AMOUNT} and ${MAX_CHIPS_AMOUNT}`);
             setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
         } else {
-            setSuccessPopup('Chips selected successfully, game will be started');
+            const chips = customChips !== '' ? parseInt(customChips, 10) : parseInt(selectedChips, 10);
+            setSuccessPopup(`Your bet is ${chips} chips, game will be started`);
             setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
             handlePlay();
         }
