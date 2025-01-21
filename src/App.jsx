@@ -396,8 +396,12 @@ const App = () => {
 
     return (
         <div className="font-['Cherry_Bomb_One',system-ui] select-none">
+            {(showWelcomeDialog || showPromotionDialog || showChipsDialog || showRegulationDialog || showAboutDialog || showTotalPointsDialog || showResultDialog || showCopyDialog || showFinalDialog) && (
+                <div className="overlay fixed inset-0 bg-black bg-opacity-20 z-10"></div>
+            )}
+
             {showWelcomeDialog && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
                         <h2 className="text-xl mb-4">Welcome to ChubGame!</h2>
                         <p className="text-xl mb-4">Get ready to play the exciting 3D dice game and earn your chips!</p>
@@ -444,7 +448,7 @@ const App = () => {
             )}
 
             {showPromotionDialog && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
                         <h2 className="text-xl mb-4">Enter Promotion Code</h2>
                         <div className="relative">
@@ -498,7 +502,7 @@ const App = () => {
             )}
 
             {showChipsDialog && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
                         <h2 className="text-xl mb-4">Select or Enter Betting Chips</h2>
                         <div className="mb-4 flex">
@@ -711,7 +715,7 @@ const App = () => {
             </div>
 
             {showTotalPointsDialog && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
                         <p className="text-xl">Total Points: {totalPoints}</p>
                         <div className="mt-4 flex justify-center space-x-4">
@@ -751,7 +755,7 @@ const App = () => {
             )}
 
             {showResultDialog && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
                         <h2 className="text-xl mb-4">Game Result</h2>
                         {resultData && (
@@ -790,7 +794,7 @@ const App = () => {
             )}
 
             {showCopyDialog && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
                         <h2 className="text-xl mb-4">Promotion Code</h2>
                         <div
@@ -844,7 +848,7 @@ const App = () => {
             )}
 
             {showFinalDialog && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
                         <h2 className="text-xl mb-4">Promotion Code Generated</h2>
                         <div className="mt-4 flex justify-center space-x-4">
@@ -869,25 +873,25 @@ const App = () => {
             )}
 
             {successPopup && (
-                <div className="fixed top-0 left-0 right-0 bg-green-500 text-white text-center py-2 slide-down">
+                <div className="fixed top-0 left-0 right-0 bg-green-500 text-white text-center py-2 slide-down z-50">
                     {successPopup}
                 </div>
             )}
 
             {errorPopup && (
-                <div className="fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-2 slide-down">
+                <div className="fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-2 slide-down z-50">
                     {errorPopup}
                 </div>
             )}
 
             {warnPopup && (
-                <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 slide-down">
+                <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 slide-down z-50">
                     {warnPopup}
                 </div>
             )}
 
             {infoPopup && (
-                <div className="fixed top-0 left-0 right-0 bg-blue-500 text-white text-center py-2 slide-down">
+                <div className="fixed top-0 left-0 right-0 bg-blue-500 text-white text-center py-2 slide-down z-50">
                     {infoPopup}
                 </div>
             )}
