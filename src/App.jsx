@@ -404,7 +404,7 @@ const App = () => {
 
             {showWelcomeDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                    <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
                         <div className="flex justify-center mb-4">
                             <img src={gameImage} alt="Game" className="w-1000 h-20" />
                         </div>
@@ -454,7 +454,7 @@ const App = () => {
 
             {showPromotionDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                    <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
                         <h2 className="text-xl mb-4">Enter Promotion Code</h2>
                         <div className="relative">
                             <input
@@ -508,7 +508,7 @@ const App = () => {
 
             {showChipsDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                    <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
                         <h2 className="text-xl mb-4">Select or Enter Betting Chips</h2>
                         <div className="mb-4 flex">
                             <button
@@ -595,7 +595,7 @@ const App = () => {
 
             {showRegulationDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto max-h-[90vh] overflow-y-auto fade-in">
                         <button
                             onClick={handleCloseRegulation}
                             className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -661,7 +661,7 @@ const App = () => {
 
             {showAboutDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto max-h-[90vh] overflow-y-aut">
+                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto max-h-[90vh] overflow-y-auto fade-in">
                         <button
                             onClick={handleCloseAbout}
                             className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -735,7 +735,7 @@ const App = () => {
 
             {showTotalPointsDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                    <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
                         <p className="text-xl">Total Points: {totalPoints}</p>
                         <div className="mt-4 flex justify-center space-x-4">
                             <button
@@ -775,7 +775,7 @@ const App = () => {
 
             {showResultDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                    <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
                         <h2 className="text-xl mb-4">Game Result</h2>
                         {resultData && (
                             <>
@@ -814,7 +814,7 @@ const App = () => {
 
             {showCopyDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                    <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
                         <h2 className="text-xl mb-4">Promotion Code</h2>
                         <div
                             className="flex items-center space-x-2 relative"
@@ -868,7 +868,7 @@ const App = () => {
 
             {showFinalDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-4 rounded shadow-lg text-center">
+                    <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
                         <h2 className="text-xl mb-4">Promotion Code Generated</h2>
                         <div className="mt-4 flex justify-center space-x-4">
                             <button
