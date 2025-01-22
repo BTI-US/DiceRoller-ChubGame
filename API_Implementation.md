@@ -481,6 +481,79 @@ function handle_send_dice_data(WP_REST_Request $request) {
     $user_id = $user->ID;
     error_log("User ID: $user_id");
 
+    // PvE mode: If promotion_code is empty and is_promotion_user is false
+    if (empty($promotion_code) && !$is_promotion_user) {
+        // Generate a random boolean to decide if the user wins
+        $user_wins = (bool)rand(0, 1);
+        error_log("PvE mode: User wins: " . ($user_wins ? 'true' : 'false'));
+
+        if ($user_wins) {
+            // User wins: Add the chips to their balance
+            mycred_add('dice_game_win', $user_id, $chips, 'PvE dice game win');
+            $new_balance = mycred_get_users_balance($user_id);
+            error_log("PvE mode: User wins. New balance: $new_balance");
+
+            // Log dice data for PvE win
+            $wpdb->insert($wpdb->prefix . 'dice_data', array(
+                'user_id' => $user_id,
+                'dice_amount' => $dice_amount,
+                'total_points' => $total_points,
+                'promotion_code' => $promotion_code,
+                'is_promotion_user' => $is_promotion_user,
+                'chips' => $chips,
+                'deduct_chips' => 0,
+                'increase_chips' => $chips,
+                'total_chips' => $new_balance,
+                'parent_user_id' => null,
+                'child_user_id' => null,
+                'created_at' => current_time('mysql'),
+            ));
+            error_log("Logged dice data for PvE win");
+
+            return new WP_REST_Response(array(
+                'code' => 200,
+                'message' => 'PvE game processed successfully. User wins.',
+                'data' => array(
+                    'status' => 'success',
+                    'balance' => $new_balance,
+                    'result' => $chips * 2, // Positive value for win
+                )
+            ), 200);
+        } else {
+            // User loses: Deduct the chips from their balance
+            mycred_subtract('dice_game_loss', $user_id, $chips, 'PvE dice game loss');
+            $new_balance = mycred_get_users_balance($user_id);
+            error_log("PvE mode: User loses. New balance: $new_balance");
+
+            // Log dice data for PvE loss
+            $wpdb->insert($wpdb->prefix . 'dice_data', array(
+                'user_id' => $user_id,
+                'dice_amount' => $dice_amount,
+                'total_points' => $total_points,
+                'promotion_code' => $promotion_code,
+                'is_promotion_user' => $is_promotion_user,
+                'chips' => $chips,
+                'deduct_chips' => $chips,
+                'increase_chips' => 0,
+                'total_chips' => $new_balance,
+                'parent_user_id' => null,
+                'child_user_id' => null,
+                'created_at' => current_time('mysql'),
+            ));
+            error_log("Logged dice data for PvE loss");
+
+            return new WP_REST_Response(array(
+                'code' => 200,
+                'message' => 'PvE game processed successfully. User loses.',
+                'data' => array(
+                    'status' => 'success',
+                    'balance' => $new_balance,
+                    'result' => -$chips, // Negative value for loss
+                )
+            ), 200);
+        }
+    }
+
     // Generate a random promotion code if it is empty and the user is a promotion user
     if (empty($promotion_code) && $is_promotion_user) {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

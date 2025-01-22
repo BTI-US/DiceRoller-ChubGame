@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { createDices } from './3d.js';
 import { FaCopy, FaInfoCircle, FaCoins, FaArrowLeft, FaPlay, FaForward, FaTimes, FaCheck, FaSave, FaBook, FaRedo } from 'react-icons/fa';
+import gameImage from '../images/game.png';
 
 const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === 'true';
 
@@ -67,6 +68,8 @@ const App = () => {
     };
     
     const handleStartPvP = () => {
+        setSuccessPopup('Starting PvP game...');
+        setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
         setSinglePlayer(false);
         setShowWelcomeDialog(false);
         setShowPromotionDialog(true);
@@ -281,7 +284,6 @@ const App = () => {
     };
 
     const handleSubmitPromotion = async () => {
-        // TODO:
         const result = await validatePromotionCode(promotionCode);
         if (!result.valid) {
             console.error('Error validating promotion code:', result.message);
@@ -403,7 +405,10 @@ const App = () => {
             {showWelcomeDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center">
-                        <h2 className="text-xl mb-4">Welcome to ChubGame!</h2>
+                        <div className="flex justify-center mb-4">
+                            <img src={gameImage} alt="Game" className="w-1000 h-20" />
+                        </div>
+                        <h2 className="text-4xl mb-4">Welcome to ChubGame!</h2>
                         <p className="text-xl mb-4">Get ready to play the exciting 3D dice game and earn your chips!</p>
                         <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 flex items-center">
                             <FaInfoCircle className="mr-2" />
@@ -590,7 +595,7 @@ const App = () => {
 
             {showRegulationDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto">
+                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
                         <button
                             onClick={handleCloseRegulation}
                             className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -604,27 +609,41 @@ const App = () => {
                                 <p>The goal of the game is to roll the dice and achieve the highest possible score.</p>
                             </div>
                             <div className="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700">
-                                <p className="font-bold">Rules:</p>
+                                <p className="font-bold">Parent User Rules:</p>
                                 <ul className="list-disc list-inside">
-                                    <li>Each player takes turns to roll the dice.</li>
-                                    <li>Players can roll up to a maximum of 6 dice at a time.</li>
-                                    <li>The total points are calculated based on the sum of the dice values.</li>
-                                    <li>Special combinations of dice rolls may yield bonus points.</li>
+                                    <li>Register with a promotion code.</li>
+                                    <li>Store promotion code as parent.</li>
+                                    <li>Save parent user and chips info.</li>
+                                    <li>Trigger dice game (win/loss).</li>
+                                    <li>Update parent points (win/loss).</li>
+                                    <li>Check promotion code for validity.</li>
+                                    <li>Validate promotion code.</li>
+                                    <li>Notify promotion code valid.</li>
+                                    <li>Adjust points and chips based on game result.</li>
                                 </ul>
                             </div>
                             <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
-                                <p className="font-bold">Scoring:</p>
+                                <p className="font-bold">Child User Rules:</p>
                                 <ul className="list-disc list-inside">
-                                    <li>Each die face value contributes to the total score.</li>
-                                    <li>Rolling a 6 on all dice grants a bonus of 50 points.</li>
-                                    <li>Rolling three of a kind grants a bonus of 20 points.</li>
+                                    <li>Send promotion code and username.</li>
+                                    <li>Validate promotion code.</li>
+                                    <li>Check promotion code validity.</li>
+                                    <li>Return promotion code validity.</li>
+                                    <li>Notify promotion code validity.</li>
+                                    <li>Trigger dice game (win/loss).</li>
+                                    <li>Update child points (win/loss).</li>
+                                    <li>Adjust points and chips based on game result.</li>
                                 </ul>
                             </div>
                             <div className="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
-                                <p className="font-bold">Penalties:</p>
+                                <p className="font-bold">PvE Single Player Rules:</p>
                                 <ul className="list-disc list-inside">
-                                    <li>Rolling a 1 on any die results in a penalty of 5 points.</li>
-                                    <li>Rolling two 1s results in a penalty of 10 points.</li>
+                                    <li>Start PvE game.</li>
+                                    <li>Generate random win/loss.</li>
+                                    <li>If player wins, add double chips to player balance.</li>
+                                    <li>Notify win and update balance.</li>
+                                    <li>If player loses, deduct chips from player balance.</li>
+                                    <li>Notify loss and update balance.</li>
                                 </ul>
                             </div>
                         </div>
@@ -642,7 +661,7 @@ const App = () => {
 
             {showAboutDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto">
+                    <div className="bg-white p-6 rounded shadow-lg text-center relative max-w-lg mx-auto max-h-[90vh] overflow-y-aut">
                         <button
                             onClick={handleCloseAbout}
                             className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"

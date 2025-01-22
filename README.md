@@ -3,7 +3,7 @@
 [![Deploy static content to Pages](https://github.com/BTI-US/DiceRoller-ChubGame/actions/workflows/static.yml/badge.svg?branch=main)](https://github.com/BTI-US/DiceRoller-ChubGame/actions/workflows/static.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- Last Modified: 2025-01-19
+- Last Modified: 2025-01-22
 - Author: Phill Weston
 
 ![screenshot](images/diceRollerSimulator0.jpg)
@@ -67,32 +67,18 @@ npm run dev
 
 |Variable Name|Description|Default Value|
 |-|-|-|
+|`VITE_DEBUG_MODE`|Enable API debug mode|`true`|
 |`VITE_VALIDATE_PROMOTION_CODE_API`|API endpoint to validate promotion code|`https://chubgame.com/wp-json/chubgame/v1/validate`|
 |`VITE_SEND_DICE_DATA_API`|API endpoint to send dice data|`https://chubgame.com/wp-json/chubgame/v1/send`|
 |`VITE_CHECK_BALANCE_API`|API Endpoint to check the user balance|`https://chubgame.com/wp-json/chubgame/v1/check-balance`|
 |`VITE_MAX_DICE_AMOUNT`|Maximum number of dice allowed|`10`|
+|`VITE_MAX_DICE_AMOUNT`|Maximum number of dice allowed|`10`|
+|`VITE_MIN_CHIPS_AMOUNT`|Minimum number of chips allowed|`1`|
+|`VITE_MAX_CHIPS_AMOUNT`|Maximum number of chips allowed|`100`|
 
-## WordPress API Endpoints
+## Game Logic
 
-### Flowchart for the Validate Promotion Code
-
-Promotion Code Verification for Child User:
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant API
-    participant Database
-
-    User->>API: Send POST /wp-json/dice-roller/v1/validate with promotionCode and username
-    API->>Database: Query promotion_codes table for promotionCode
-    Database->>API: Return promotion code record (valid or not)
-    API->>User: Return response with valid status or error message
-```
-
-### Flowchart for the Send Dice Data
-
-Parent User Sequence Diagram:
+### Parent User Sequence Diagram
 
 ```mermaid
 sequenceDiagram
@@ -119,16 +105,159 @@ sequenceDiagram
     participant WP as WordPress Database
     participant Dice as Dice Game Logic
 
-    Child->>WP: Submit Username and Promotion Code
-    WP->>Dice: Check for Parent User by Promotion Code
-    Dice->>WP: Retrieve Parent User (from Promo Code)
-    WP->>Child: Return Parent User Info
-    Child->>WP: Deduct Chips (if Not Promotion User)
-    Dice->>WP: Deduct Chips for Parent/Child Users (Win/Loss)
-    Dice->>Child: Notify Participation and Points Update
+    Child->>WP: Send Promotion Code and Username
+    WP->>Dice: Validate Promotion Code
+    Dice->>WP: Check Promotion Code Validity
+    WP->>Dice: Return Promotion Code Validity
+    Dice->>Child: Notify Promotion Code Validity
     Child->>Dice: Trigger Dice Game (Win/Loss)
-    Dice->>WP: Update Points (Win/Loss for Child)
-    Dice->>Child: Notify Points and Chips After Game
+    Dice->>WP: Update Child Points (Win/Loss)
+    Dice->>Child: Adjust Points and Chips Based on Game Result
+```
+
+PvE Single Player Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant Player as Single Player
+    participant WP as WordPress Database
+    participant Dice as Dice Game Logic
+
+    Player->>Dice: Start PvE Game
+    Dice->>Dice: Generate Random Win/Loss
+    alt Player Wins
+        Dice->>WP: Add Double Chips to Player Balance
+        Dice->>Player: Notify Win and Update Balance
+    else Player Loses
+        Dice->>WP: Deduct Chips from Player Balance
+        Dice->>Player: Notify Loss and Update Balance
+    end
+```
+
+## WordPress API Endpoints
+
+### Flowchart for the Validate Promotion Code
+
+Promotion Code Verification for Child User:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant Database
+
+    User->>API: Send POST /wp-json/chubgame/v1/validate <br> with promotionCode and username
+    API->>Database: Query dice_data table for promotionCode and is_promotion_user = 1
+    Database->>API: Return promotion code record (valid or not)
+    alt Promotion code is valid
+        API->>Database: Check if promotion code has already been used
+        Database->>API: Return usage status
+        alt Promotion code not used
+            API->>Database: Associate parent and child users
+            API->>User: Return response with valid status and parent dice amount
+        else Promotion code used
+            API->>User: Return error response (promotion code already used)
+        end
+    else Promotion code invalid
+        API->>User: Return error response (invalid promotion code)
+    end
+```
+
+### Flowchart for the Send Dice Data
+
+Parent User Sequence Diagram:
+
+```mermaid
+sequenceDiagram
+    participant Parent as Parent User
+    participant API
+    participant Database
+
+    Parent->>API: Send POST /wp-json/chubgame/v1/send <br> with diceAmount, totalPoints, promotionCode, isPromotionUser, username, chips
+    API->>Database: Validate user and parameters
+    alt Parameters valid
+        alt Promotion code is empty and isPromotionUser is false (PvE mode)
+            API->>API: Generate random win/loss
+            alt User wins
+                API->>Database: Add double chips to user balance
+                API->>Database: Log dice data for win
+                API->>Parent: Return success response with updated balance and result
+            else User loses
+                API->>Database: Deduct chips from user balance
+                API->>Database: Log dice data for loss
+                API->>Parent: Return success response with updated balance and result
+            end
+        else Promotion code is not empty and isPromotionUser is true (PvP mode)
+            API->>Database: Generate promotion code if empty
+            API->>Database: Check if promotion code has already been used
+            alt Promotion code not used
+                API->>Database: Deduct chips from parent user
+                API->>Database: Log dice data for parent
+                API->>Parent: Return success response with updated balance and promotion code
+            else Promotion code used
+                API->>Parent: Return error response (promotion code already used)
+            end
+        end
+    else Parameters invalid
+        API->>Parent: Return error response (missing or invalid parameters)
+    end
+```
+
+Child User Sequence Diagram:
+
+```mermaid
+sequenceDiagram
+    participant Child as Child User
+    participant API
+    participant Database
+
+    Child->>API: Send POST /wp-json/chubgame/v1/send <br> with diceAmount, totalPoints, promotionCode, isPromotionUser, username, chips
+    API->>Database: Validate user and parameters
+    alt Parameters valid
+        API->>Database: Find parent by promotion code
+        alt Parent found
+            API->>Database: Check child balance
+            alt Child balance sufficient
+                API->>Database: Deduct chips from child user
+                API->>Database: Determine winner and distribute chips
+                API->>Database: Log dice data for child and parent
+                API->>Child: Return success response with updated balance and result
+            else Child balance insufficient
+                API->>Database: Refund parent
+                API->>Child: Return error response (insufficient balance)
+            end
+        else Parent not found
+            API->>Child: Return error response (invalid promotion code or parent not found)
+        end
+    else Parameters invalid
+        API->>Child: Return error response (missing or invalid parameters)
+    end
+```
+
+PvE Single Player Sequence Diagram:
+
+```mermaid
+sequenceDiagram
+    participant Player as Single Player
+    participant API
+    participant Database
+
+    Player->>API: Send POST /wp-json/chubgame/v1/send <br> with diceAmount, totalPoints, promotionCode (empty), isPromotionUser (false), username, chips
+    API->>Database: Validate user and parameters
+    alt Parameters valid
+        API->>API: Generate random win/loss
+        alt Player wins
+            API->>Database: Add double chips to player balance
+            API->>Database: Log dice data for win
+            API->>Player: Return success response with updated balance and result
+        else Player loses
+            API->>Database: Deduct chips from player balance
+            API->>Database: Log dice data for loss
+            API->>Player: Return success response with updated balance and result
+        end
+    else Parameters invalid
+        API->>Player: Return error response (missing or invalid parameters)
+    end
 ```
 
 ## Promotion Code Validation API
