@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { createDices } from './3d.js';
 import { FaCopy, FaInfoCircle, FaCoins, FaArrowLeft, FaPlay, FaForward, FaTimes, FaCheck, FaSave, FaBook, FaRedo } from 'react-icons/fa';
+import { Fireworks } from 'fireworks-js';
 import gameImage from '../images/game.png';
 
 const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === 'true';
@@ -58,6 +59,65 @@ const App = () => {
             setTimeout(() => setWarnPopup(''), 3000); // Hide warning popup after 3 seconds
         }
     }, []);
+    
+    useEffect(() => {
+        console.log('TEST: Result Data:', resultData);
+        let fireworksInstance;
+        if (showResultDialog && resultData && resultData.result > 0) {
+            const container = document.createElement('div');
+            container.style.position = 'fixed';
+            container.style.top = 0;
+            container.style.left = 0;
+            container.style.width = '100vh';
+            container.style.height = '100vh';
+            container.style.zIndex = 99999;
+            container.style.pointerEvents = 'none'; // Allow interaction with buttons
+            container.style.overflow = 'hidden'; // Prevent scrollbars
+            document.body.appendChild(container);
+
+            fireworksInstance = new Fireworks(container, {
+                rocketsPoint: 50,
+                speed: 2,
+                acceleration: 1.05,
+                friction: 0.98,
+                gravity: 1.5,
+                particles: 50,
+                trace: 3,
+                explosion: 5,
+                autoresize: true,
+                brightness: {
+                    min: 50,
+                    max: 80,
+                    decay: {
+                        min: 0.015,
+                        max: 0.03
+                    }
+                },
+                boundaries: {
+                    x: 50,
+                    y: 50,
+                    width: container.clientWidth,
+                    height: container.clientHeight
+                }
+            });
+
+            fireworksInstance.start();
+
+            // Stop fireworks after 5 seconds
+            setTimeout(() => {
+                fireworksInstance.stop();
+                if (container.parentNode) {
+                    container.parentNode.removeChild(container);
+                }
+            }, 5000);
+        }
+
+        return () => {
+            if (fireworksInstance) {
+                fireworksInstance.stop();
+            }
+        };
+    }, [showResultDialog, resultData]);
 
     const handleStartPvE = () => {
         setSuccessPopup('Starting PvE game...');
@@ -212,7 +272,7 @@ const App = () => {
                 data: {
                     status: 'success',
                     balance: 1000, // Example balance
-                    result: totalPoints > 50 ? 100 : -50, // Example result based on totalPoints
+                    result: totalPoints > 20 ? 100 : -50, // Example result based on totalPoints
                     promotion_code: promotionCode || 'DEBUGCODE1234567' // Example promotion code
                 }
             };
@@ -419,7 +479,7 @@ const App = () => {
                                 onClick={handleOpenRegulation}
                                 className="px-4 py-2 bg-gray-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
-                                <FaBook className="mr-2" /> Game Regulation
+                                <FaBook className="mr-2" /> Game Rules
                             </button>
                             <button
                                 onClick={handleOpenAbout}
@@ -584,7 +644,7 @@ const App = () => {
                     onClick={handleOpenRegulation} 
                     className="duration-300 active:scale-125 transition-transform hover:scale-105"
                 >
-                    Game Regulation</p>
+                    Game Rules</p>
                 <p
                     onClick={handleOpenAbout} 
                     className="duration-300 active:scale-125 transition-transform hover:scale-105"
@@ -602,7 +662,7 @@ const App = () => {
                         >
                             <FaTimes />
                         </button>
-                        <h2 className="text-2xl font-bold mb-4">Game Regulation</h2>
+                        <h2 className="text-2xl font-bold mb-4">Game Rules</h2>
                         <div className="text-left">
                             <div className="mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700">
                                 <p className="font-bold">Objective:</p>
