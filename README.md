@@ -266,7 +266,7 @@ Validates a promotion code and associates the parent user with the promotion cod
 
 ### Endpoint
 
-`POST /chubgame/v1/validate`
+`POST /wp-json/chubgame/v1/validate`
 
 ### Parameters
 
@@ -308,7 +308,7 @@ Checks if the user has sufficient balance for the specified chips.
 
 ### Endpoint
 
-`POST /chubgame/v1/check-balance`
+`POST /wp-json/chubgame/v1/check-balance`
 
 ### Parameters
 
@@ -349,7 +349,7 @@ Handles the dice game data and manages the chips for parent and child users.
 
 ### Endpoint
 
-`POST /chubgame/v1/send`
+`POST /wp-json/chubgame/v1/send`
 
 ### Parameters
 

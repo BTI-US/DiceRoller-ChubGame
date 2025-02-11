@@ -41,7 +41,7 @@ function mycredpro_load_dice_game_hook() {
             parent::__construct( array(
                 'id'       => 'dice_game',
                 'defaults' => array(
-                    'participation_points' => 10,  // Fixed points for participation
+                    'participation_points' => 0,  // Fixed points for participation
                     'win_points'           => 10,  // Default win points
                     'win_points_max'       => 5000,  // Max win points
                     'win_points_min'       => 5,   // Min win points
@@ -86,7 +86,7 @@ function mycredpro_load_dice_game_hook() {
             $points = $this->prefs['participation_points'];
 
             // Add points for participation
-            $this->core->add_creds(
+            mycred_add(
                 'dice_game_participation',
                 $user_id,
                 $points,
@@ -108,7 +108,7 @@ function mycredpro_load_dice_game_hook() {
             $points = $this->clamp_points($points, 'win');
 
             // Add points for winning
-            $this->core->add_creds(
+            mycred_add(
                 'dice_game_win',
                 $user_id,
                 $points,
@@ -138,7 +138,7 @@ function mycredpro_load_dice_game_hook() {
             }
 
             // Deduct points for losing
-            $this->core->add_creds(
+            mycred_add(
                 'dice_game_loss',
                 $user_id,
                 -$points,  // Negative for deduction
@@ -289,6 +289,37 @@ add_action('rest_api_init', function () {
 function handle_validate_promotion_code(WP_REST_Request $request) {
     global $wpdb;
 
+    // Get the site's domain dynamically
+    $site_url = home_url();
+    $parsed_url = parse_url($site_url);
+    $host = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+
+    // Allowed domain pattern
+    $allowed_domain_pattern = '/^([a-z0-9]+[.])*' . preg_quote($host, '/') . '$/';
+
+    // Check the Origin or Referer header
+    $origin = $request->get_header('origin');
+    $referer = $request->get_header('referer');
+
+    $is_allowed = false;
+    if ($origin) {
+        $origin_host = parse_url($origin, PHP_URL_HOST);
+        if (preg_match($allowed_domain_pattern, $origin_host)) {
+            $is_allowed = true;
+        }
+    }
+
+    if ($referer) {
+        $referer_host = parse_url($referer, PHP_URL_HOST);
+        if (preg_match($allowed_domain_pattern, $referer_host)) {
+            $is_allowed = true;
+        }
+    }
+
+    if (!$is_allowed) {
+        return new WP_REST_Response(array('valid' => false, 'error' => 'Invalid origin or referer'), 403);
+    }
+
     $promotion_code = $request->get_param('promotionCode');
     $username = $request->get_param('username');
 
@@ -372,6 +403,37 @@ add_action('rest_api_init', function () {
 function handle_check_balance(WP_REST_Request $request) {
     global $wpdb;
 
+    // Get the site's domain dynamically
+    $site_url = home_url();
+    $parsed_url = parse_url($site_url);
+    $host = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+
+    // Allowed domain pattern
+    $allowed_domain_pattern = '/^([a-z0-9]+[.])*' . preg_quote($host, '/') . '$/';
+
+    // Check the Origin or Referer header
+    $origin = $request->get_header('origin');
+    $referer = $request->get_header('referer');
+
+    $is_allowed = false;
+    if ($origin) {
+        $origin_host = parse_url($origin, PHP_URL_HOST);
+        if (preg_match($allowed_domain_pattern, $origin_host)) {
+            $is_allowed = true;
+        }
+    }
+
+    if ($referer) {
+        $referer_host = parse_url($referer, PHP_URL_HOST);
+        if (preg_match($allowed_domain_pattern, $referer_host)) {
+            $is_allowed = true;
+        }
+    }
+
+    if (!$is_allowed) {
+        return new WP_REST_Response(array('valid' => false, 'error' => 'Invalid origin or referer'), 403);
+    }
+
     // Get the request parameters
     $username = $request->get_param('username');
     $chips = $request->get_param('chips'); // The chips (bet amount) to be checked
@@ -453,6 +515,37 @@ function check_if_user_logged_in() {
 function handle_send_dice_data(WP_REST_Request $request) {
     global $wpdb;
 
+    // Get the site's domain dynamically
+    $site_url = home_url();
+    $parsed_url = parse_url($site_url);
+    $host = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+
+    // Allowed domain pattern
+    $allowed_domain_pattern = '/^([a-z0-9]+[.])*' . preg_quote($host, '/') . '$/';
+
+    // Check the Origin or Referer header
+    $origin = $request->get_header('origin');
+    $referer = $request->get_header('referer');
+
+    $is_allowed = false;
+    if ($origin) {
+        $origin_host = parse_url($origin, PHP_URL_HOST);
+        if (preg_match($allowed_domain_pattern, $origin_host)) {
+            $is_allowed = true;
+        }
+    }
+
+    if ($referer) {
+        $referer_host = parse_url($referer, PHP_URL_HOST);
+        if (preg_match($allowed_domain_pattern, $referer_host)) {
+            $is_allowed = true;
+        }
+    }
+
+    if (!$is_allowed) {
+        return new WP_REST_Response(array('valid' => false, 'error' => 'Invalid origin or referer'), 403);
+    }
+
     // Extract request parameters
     $dice_amount = $request->get_param('diceAmount');
     $total_points = $request->get_param('totalPoints');
@@ -481,6 +574,18 @@ function handle_send_dice_data(WP_REST_Request $request) {
     $user_id = $user->ID;
     error_log("User ID: $user_id");
 
+    // Fetch the preferences for points limits
+    $prefs = get_option('mycred_pref_hooks')['dice_game'];
+    $win_points_min = isset($prefs['win_points_min']) ? $prefs['win_points_min'] : 5;
+    $win_points_max = isset($prefs['win_points_max']) ? $prefs['win_points_max'] : 5000;
+    $loss_points_min = isset($prefs['loss_points_min']) ? $prefs['loss_points_min'] : 5;
+    $loss_points_max = isset($prefs['loss_points_max']) ? $prefs['loss_points_max'] : 5000;
+
+    // Function to clamp points
+    function clamp_points($points, $min, $max) {
+        return max($min, min($points, $max));
+    }
+
     // PvE mode: If promotion_code is empty and is_promotion_user is false
     if (empty($promotion_code) && !$is_promotion_user) {
         // Generate a random boolean to decide if the user wins
@@ -488,7 +593,10 @@ function handle_send_dice_data(WP_REST_Request $request) {
         error_log("PvE mode: User wins: " . ($user_wins ? 'true' : 'false'));
 
         if ($user_wins) {
-            // User wins: Add the chips to their balance
+            // User wins: Clamp the chips to win points limits
+            $chips = clamp_points($chips, $win_points_min, $win_points_max);
+
+            // Add the chips to their balance
             mycred_add('dice_game_win', $user_id, $chips, 'PvE dice game win');
             $new_balance = mycred_get_users_balance($user_id);
             error_log("PvE mode: User wins. New balance: $new_balance");
@@ -520,7 +628,10 @@ function handle_send_dice_data(WP_REST_Request $request) {
                 )
             ), 200);
         } else {
-            // User loses: Deduct the chips from their balance
+            // User loses: Clamp the chips to loss points limits
+            $chips = clamp_points($chips, $loss_points_min, $loss_points_max);
+
+            // Deduct the chips from their balance
             mycred_subtract('dice_game_loss', $user_id, $chips, 'PvE dice game loss');
             $new_balance = mycred_get_users_balance($user_id);
             error_log("PvE mode: User loses. New balance: $new_balance");
@@ -592,6 +703,7 @@ function handle_send_dice_data(WP_REST_Request $request) {
         }
 
         // Deduct chips from parent user
+        $chips = clamp_points($chips, $loss_points_min, $loss_points_max);
         mycred_subtract('dice_game_loss', $user_id, $chips, 'Dice game loss');
         $parent_balance = mycred_get_users_balance($user_id); // Updated balance
         error_log("Updated parent balance after deduction: $parent_balance");
@@ -650,6 +762,7 @@ function handle_send_dice_data(WP_REST_Request $request) {
         }
 
         // Deduct chips from child user
+        $chips = clamp_points($chips, $loss_points_min, $loss_points_max);
         mycred_subtract('dice_game_loss', $user_id, $chips, 'Dice game loss');
         $child_balance = mycred_get_users_balance($user_id); // Updated child balance
         error_log("Updated child balance after deduction: $child_balance");

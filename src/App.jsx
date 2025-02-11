@@ -284,6 +284,7 @@ const App = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     diceAmount,
                     totalPoints,
@@ -326,6 +327,7 @@ const App = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({ promotionCode: code, username }),
             });
             const data = await response.json();
@@ -372,6 +374,7 @@ const App = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({ username, chips }),
             });
             const data = await response.json();
