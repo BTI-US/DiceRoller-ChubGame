@@ -2,15 +2,16 @@
  * @Author: Phillweston 2436559745@qq.com
  * @Date: 2025-01-01 22:00:54
  * @LastEditors: Phillweston
- * @LastEditTime: 2025-01-21 14:40:19
- * @FilePath: \DiceRollerSimulator-ThreeJS\src\App.jsx
+ * @LastEditTime: 2025-02-16 14:40:19
+ * @FilePath: \DiceRoller-ChubGame\src\App.jsx
  * @Description: 
  * 
  */
 import { useState, useEffect } from 'react';
 import { createDices } from './3d.js';
-import { FaCopy, FaInfoCircle, FaCoins, FaArrowLeft, FaPlay, FaForward, FaTimes, FaCheck, FaSave, FaBook, FaRedo } from 'react-icons/fa';
+import { FaCopy, FaInfoCircle, FaCoins, FaArrowLeft, FaPlay, FaForward, FaTimes, FaCheck, FaSave, FaBook, FaRedo, FaLock } from 'react-icons/fa';
 import { Fireworks } from 'fireworks-js';
+import { PropTypes } from 'prop-types';
 import gameImage from '../images/game.png';
 
 const DEBUG_MODE = import.meta.env.VITE_DEBUG_MODE === 'true';
@@ -21,11 +22,16 @@ const CHECK_BALANCE_API = import.meta.env.VITE_CHECK_BALANCE_API;
 const MAX_DICE_AMOUNT = parseInt(import.meta.env.VITE_MAX_DICE_AMOUNT, 10);  // Parsing as an integer
 const MIN_CHIPS_AMOUNT = parseInt(import.meta.env.VITE_MIN_CHIPS_AMOUNT, 10);  // Parsing as an integer
 const MAX_CHIPS_AMOUNT = parseInt(import.meta.env.VITE_MAX_CHIPS_AMOUNT, 100);  // Parsing as an integer
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+const CHUBGAME_URL = import.meta.env.VITE_CHUBGAME_URL;
+const OAUTH_CLIENT_ID = import.meta.env.VITE_OAUTH_CLIENT_ID;
+const OAUTH_CLIENT_SECRET = import.meta.env.VITE_OAUTH_CLIENT_SECRET;
 
 const App = () => {
     const [showWelcomeDialog, setShowWelcomeDialog] = useState(true);
     const [diceAmount, setDiceAmount] = useState(6);
     const [totalPoints, setTotalPoints] = useState(null);
+    const [showAuthenticationDialog, setShowAuthenticationDialog] = useState(false);
     const [showTotalPointsDialog, setShowTotalPointsDialog] = useState(false);
     const [showPromotionDialog, setShowPromotionDialog] = useState(false);
     const [promotionCode, setPromotionCode] = useState('');
@@ -48,6 +54,13 @@ const App = () => {
     const [resultData, setResultData] = useState(null);
     const [showFinalDialog, setShowFinalDialog] = useState(false);
     const [openedFromWelcome, setOpenedFromWelcome] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState('');
+
+    useEffect(() => {
+        if (window.location.pathname === '/oauth/callback') {
+            handleOAuthCallback();
+        }
+    }, []);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -119,21 +132,89 @@ const App = () => {
         };
     }, [showResultDialog, resultData]);
 
-    const handleStartPvE = () => {
-        setSuccessPopup('Starting PvE game...');
-        setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
-        setSinglePlayer(true);
+    const handleAuthentication = (isPvE) => {
+        setInfoPopup('You need to authenticate to play the game');
+        setTimeout(() => setInfoPopup(''), 3000); // Hide success popup after 3 seconds
+        setSinglePlayer(isPvE);
         setShowWelcomeDialog(false);
-        setShowChipsDialog(true);
+        setShowAuthenticationDialog(true);
     };
-    
-    const handleStartPvP = () => {
-        setSuccessPopup('Starting PvP game...');
-        setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
-        setSinglePlayer(false);
-        setShowWelcomeDialog(false);
-        setShowPromotionDialog(true);
+
+    const handleOAuthCallback = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+        const storedState = localStorage.getItem('oauth_state');
+
+        if (!code || !state || state !== storedState) {
+            setErrorPopup('Invalid OAuth callback');
+            setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
+            return;
+        }
+
+        localStorage.removeItem('oauth_state');
+
+        const redirectUri = `${window.location.origin}/oauth/callback`;
+        const tokenUrl = new URL(`${CHUBGAME_URL}/oauth/token`);
+
+        try {
+            const response = await fetch(tokenUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    grant_type: 'authorization_code',
+                    code: code,
+                    redirect_uri: redirectUri,
+                    client_id: OAUTH_CLIENT_ID,
+                    client_secret: OAUTH_CLIENT_SECRET,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.access_token) {
+                localStorage.setItem('oauth_access_token', data.access_token);
+                setSuccessPopup('Authentication successful, Starting game...');
+                setTimeout(() => setSuccessPopup(''), 3000); // Hide success popup after 3 seconds
+                setShowAuthenticationDialog(false);
+
+                if (singlePlayer) {
+                    setShowChipsDialog(true);
+                } else {
+                    setShowPromotionDialog(true);
+                }
+            } else {
+                setErrorPopup('API response error');
+                setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
+            }
+        } catch (error) {
+            console.error('Error during OAuth callback:', error);
+            setErrorPopup('Error during OAuth callback');
+            setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
+        }
     };
+
+    const handleStartAuthentication = () => {
+        if (TURNSTILE_SITE_KEY && !turnstileToken) {
+            setErrorPopup('Human verification failed');
+            setTimeout(() => setErrorPopup(''), 3000); // Hide error popup after 3 seconds
+            return;
+        }
+
+        const redirectUri = `${window.location.origin}/oauth/callback`;
+        const oauthState = Math.random().toString(36).substring(2);
+        localStorage.setItem('oauth_state', oauthState);
+
+        const authUrl = new URL(`${CHUBGAME_URL}/oauth/authorize`);
+        authUrl.searchParams.append('response_type', 'code');
+        authUrl.searchParams.append('client_id', OAUTH_CLIENT_ID);
+        authUrl.searchParams.append('redirect_uri', redirectUri);
+        authUrl.searchParams.append('state', oauthState);
+
+        window.location.href = authUrl.toString();
+    }
 
     const handleOpenRegulation = () => {
         setShowRegulationDialog(true);
@@ -278,11 +359,18 @@ const App = () => {
             };
         }
 
+        const token = localStorage.getItem('oauth_access_token');
+        if (!token) {
+            console.error('OAuth access token not found');
+            return { success: false, message: 'OAuth access token not found' };
+        }
+
         try {
             const response = await fetch(SEND_DICE_DATA_API, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
                 },
                 credentials: 'include',
                 body: JSON.stringify({
@@ -321,11 +409,18 @@ const App = () => {
             return { valid: true, amount: 5 };
         }
 
+        const token = localStorage.getItem('oauth_access_token');
+        if (!token) {
+            console.error('OAuth access token not found');
+            return { valid: false, message: 'OAuth access token not found' };
+        }
+
         try {
             const response = await fetch(VALIDATE_PROMOTION_CODE_API, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
                 },
                 credentials: 'include',
                 body: JSON.stringify({ promotionCode: code, username }),
@@ -368,11 +463,18 @@ const App = () => {
             return { valid: true, balance: 1000 }; // Example balance
         }
 
+        const token = localStorage.getItem('oauth_access_token');
+        if (!token) {
+            console.error('OAuth access token not found');
+            return { valid: false, message: 'OAuth access token not found' };
+        }
+
         try {
             const response = await fetch(CHECK_BALANCE_API, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
                 },
                 credentials: 'include',
                 body: JSON.stringify({ username, chips }),
@@ -459,9 +561,33 @@ const App = () => {
         }
     };
 
+    const Turnstile = ({ siteKey, onVerify }) => {
+        useEffect(() => {
+            if (window.turnstile) {
+                window.turnstile.render('#turnstile-widget', {
+                    sitekey: siteKey,
+                    callback: onVerify,
+                });
+            }
+        }, [siteKey, onVerify]);
+
+        return <div id="turnstile-widget"></div>;
+    };
+
+    Turnstile.propTypes = {
+        siteKey: PropTypes.string.isRequired,
+        onVerify: PropTypes.func.isRequired,
+    };
+
+    const handleTurnstileVerify = (token) => {
+        console.log('Turnstile token:', token);
+        setTurnstileToken(token);
+        // Handle the verification token (e.g., send it to your server for validation)
+    };
+
     return (
         <div className="font-['Cherry_Bomb_One',system-ui] select-none">
-            {(showWelcomeDialog || showPromotionDialog || showChipsDialog || showRegulationDialog || showAboutDialog || showTotalPointsDialog || showResultDialog || showCopyDialog || showFinalDialog) && (
+            {(showWelcomeDialog || showAuthenticationDialog || showPromotionDialog || showChipsDialog || showRegulationDialog || showAboutDialog || showTotalPointsDialog || showResultDialog || showCopyDialog || showFinalDialog) && (
                 <div className="overlay fixed inset-0 bg-black bg-opacity-20 z-10"></div>
             )}
 
@@ -499,13 +625,13 @@ const App = () => {
                                 <FaTimes className="mr-2" /> Close
                             </button>
                             <button
-                                onClick={handleStartPvE}
+                                onClick={() => handleAuthentication(true)}
                                 className="px-4 py-2 bg-green-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
                                 <FaPlay className="mr-2" /> Start PvE
                             </button>
                             <button
-                                onClick={handleStartPvP}
+                                onClick={() => handleAuthentication(false)}
                                 className="px-4 py-2 bg-blue-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
                             >
                                 <FaPlay className="mr-2" /> Start PvP
@@ -515,10 +641,42 @@ const App = () => {
                 </div>
             )}
 
+            {showAuthenticationDialog && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
+                        <h2 className="text-4xl mb-4">User Authentication</h2>
+                        <p className="text-xl mb-4">Click the following button to start the authentication, after success the game will proceed.</p>
+                        <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 flex items-center">
+                            <FaInfoCircle className="mr-2" />
+                            <p>You need to pass the CloudFlare Turnstile verification.</p>
+                        </div>
+                        {TURNSTILE_SITE_KEY && <Turnstile siteKey={TURNSTILE_SITE_KEY} onVerify={handleTurnstileVerify} />}
+                        <div className="mt-4 flex justify-center space-x-4">
+                            <button
+                                onClick={() => {
+                                    setShowAuthenticationDialog(false);
+                                    setShowWelcomeDialog(true);
+                                }}
+                                className="mr-2 px-4 py-2 bg-gray-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaArrowLeft className="mr-2" /> Back
+                            </button>
+                            <button
+                                onClick={handleStartAuthentication}
+                                className="px-4 py-2 bg-green-500 text-white rounded transition-transform duration-300 hover:bg-yellow-500 hover:scale-105 active:bg-green-500 flex items-center"
+                            >
+                                <FaLock className="mr-2" /> Authenticate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showPromotionDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
-                        <h2 className="text-xl mb-4">Enter Promotion Code</h2>
+                        <h2 className="text-4xl mb-4">Enter Promotion Code</h2>
+                        <p className="text-xl mb-4">For parent user, you neeed to click the Skip, for child user, you need to input the promotion code and click the Start.</p>
                         <div className="relative">
                             <input
                                 type="text"
@@ -572,7 +730,12 @@ const App = () => {
             {showChipsDialog && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-white p-4 rounded shadow-lg text-center fade-in">
-                        <h2 className="text-xl mb-4">Select or Enter Betting Chips</h2>
+                        <h2 className="text-4xl mb-4">Select or Enter Chip Amount</h2>
+                        <p className="text-xl mb-4">If you input the customized amount, it will replace the fixed amount selected.</p>
+                        <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 flex items-center">
+                            <FaInfoCircle className="mr-2" />
+                            <p>The maximum token amount is {MAX_CHIPS_AMOUNT}, the minimum token amount is {MIN_CHIPS_AMOUNT}.</p>
+                        </div>
                         <div className="mb-4 flex">
                             <button
                                 onClick={() => setSelectedChips('10')}

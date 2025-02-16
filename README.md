@@ -75,6 +75,10 @@ npm run dev
 |`VITE_MAX_DICE_AMOUNT`|Maximum number of dice allowed|`10`|
 |`VITE_MIN_CHIPS_AMOUNT`|Minimum number of chips allowed|`1`|
 |`VITE_MAX_CHIPS_AMOUNT`|Maximum number of chips allowed|`100`|
+|`VITE_TURNSTILE_SITE_KEY`|CloudFlare Turnstile site key|`6Lc2Qb4cAAAAAAB9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9`|
+|`VITE_CHUBGAME_URL`|ChubGame website URL|`https://chubgame.com/`|
+|`VITE_OAUTH_CLIENT_ID`|OAuth client ID|`1234567890`|
+|`VITE_OAUTH_CLIENT_SECRET`|OAuth client Secret|`1234567890`|
 
 ## Game Logic
 

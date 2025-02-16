@@ -3,7 +3,7 @@
  * @Date: 2025-01-01 22:00:54
  * @LastEditors: Phillweston
  * @LastEditTime: 2025-01-05 12:27:41
- * @FilePath: \DiceRollerSimulator-ThreeJS\src\3d.js
+ * @FilePath: \DiceRoller-ChubGame\src\3d.js
  * @Description: 
  * 
  */
