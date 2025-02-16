@@ -65,6 +65,10 @@ jobs:
           VITE_MAX_DICE_AMOUNT: ${{ vars.VITE_MAX_DICE_AMOUNT || 10 }}
           VITE_MIN_CHIPS_AMOUNT: ${{ vars.VITE_MIN_CHIPS_AMOUNT || 10 }}
           VITE_MAX_CHIPS_AMOUNT: ${{ vars.VITE_MAX_CHIPS_AMOUNT || 100 }}
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
+          VITE_CHUBGAME_URL: ${{ vars.VITE_CHUBGAME_URL || 'https://chubgame.com' }}
+          VITE_OAUTH_CLIENT_ID: ${{ secrets.VITE_OAUTH_CLIENT_ID }}
+          VITE_OAUTH_CLIENT_SECRET: ${{ secrets.VITE_OAUTH_CLIENT_SECRET }}
         run: npm run build
 
       # Upload build artifacts to GitHub Pages
