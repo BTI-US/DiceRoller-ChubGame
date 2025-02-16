@@ -58,13 +58,13 @@ jobs:
       # Build the app with environment variables
       - name: Build the app
         env:
-          VITE_DEBUG_MODE: ${{ secrets.VITE_DEBUG_MODE || 'false' }}
-          VITE_VALIDATE_PROMOTION_CODE_API: ${{ secrets.VITE_VALIDATE_PROMOTION_CODE_API || 'https://chubgame.com/wp-json/chubgame/v1/validate' }}
-          VITE_SEND_DICE_DATA_API: ${{ secrets.VITE_SEND_DICE_DATA_API || 'https://chubgame.com/wp-json/chubgame/v1/send' }}
-          VITE_CHECK_BALANCE_API: ${{ secrets.VITE_CHECK_BALANCE_API || 'https://chubgame.com/wp-json/chubgame/v1/check-balance' }}
-          VITE_MAX_DICE_AMOUNT: ${{ secrets.VITE_MAX_DICE_AMOUNT || 10 }}
-          VITE_MIN_CHIPS_AMOUNT: ${{ secrets.VITE_MIN_CHIPS_AMOUNT || 10 }}
-          VITE_MAX_CHIPS_AMOUNT: ${{ secrets.VITE_MAX_CHIPS_AMOUNT || 100 }}
+          VITE_DEBUG_MODE: ${{ vars.VITE_DEBUG_MODE || 'false' }}
+          VITE_VALIDATE_PROMOTION_CODE_API: ${{ vars.VITE_VALIDATE_PROMOTION_CODE_API || 'https://chubgame.com/wp-json/chubgame/v1/validate' }}
+          VITE_SEND_DICE_DATA_API: ${{ vars.VITE_SEND_DICE_DATA_API || 'https://chubgame.com/wp-json/chubgame/v1/send' }}
+          VITE_CHECK_BALANCE_API: ${{ vars.VITE_CHECK_BALANCE_API || 'https://chubgame.com/wp-json/chubgame/v1/check-balance' }}
+          VITE_MAX_DICE_AMOUNT: ${{ vars.VITE_MAX_DICE_AMOUNT || 10 }}
+          VITE_MIN_CHIPS_AMOUNT: ${{ vars.VITE_MIN_CHIPS_AMOUNT || 10 }}
+          VITE_MAX_CHIPS_AMOUNT: ${{ vars.VITE_MAX_CHIPS_AMOUNT || 100 }}
         run: npm run build
 
       # Upload build artifacts to GitHub Pages
