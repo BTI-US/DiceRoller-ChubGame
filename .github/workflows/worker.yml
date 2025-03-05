@@ -1,0 +1,47 @@
+name: Deploy Worker to Cloudflare
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - 'worker/**'
+      - 'wrangler.toml'
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - 'worker/**'
+      - 'wrangler.toml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Replace Worker Name in wrangler.toml
+        run: |
+          WORKER_NAME=${{ secrets.CLOUDFLARE_WORKER_NAME || 'api_chubgame' }}
+
+          sed -i "s/name = \".*\"/name = \"$WORKER_NAME\"/" ../wrangler.toml
+
+      - name: Replace Port in worker.js
+        run: |
+          AIRDROP_PORT=${{ vars.AIRDROP_SERVER_HTTP_PORT || '4000' }}
+          AIRDROP_PORT2=${{ vars.AIRDROP_SERVER_HTTP_PORT2 || '4001' }}
+          GANACHE_PORT=${{ vars.AIRDROP_HTTP_PORT || '8546' }}
+
+          sed -i "s/__AIRDROP_SERVER_HTTP_PORT__/$AIRDROP_PORT/g" worker.js
+          sed -i "s/__AIRDROP_SERVER_HTTP_PORT2__/$AIRDROP_PORT2/g" worker.js
+          sed -i "s/__GANACHE_HTTP_PORT__/$GANACHE_PORT/g" worker.js
+
+      - name: Publish the Worker
+        run: wrangler deploy --env production
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -1,0 +1,6 @@
+name = "api_chubgame"
+main = "worker/worker.js"
+compatibility_date = "2025-03-04"
+
+[env.production]
+name = "api_chubgame" # Explicitly set the name for the production environment
