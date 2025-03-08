@@ -1,6 +1,7 @@
 # DiceRoller-ChubGame
 
 [![Deploy static content to Pages](https://github.com/BTI-US/DiceRoller-ChubGame/actions/workflows/static.yml/badge.svg?branch=main)](https://github.com/BTI-US/DiceRoller-ChubGame/actions/workflows/static.yml)
+[![Deploy Worker to Cloudflare](https://github.com/BTI-US/DiceRoller-ChubGame/actions/workflows/worker.yml/badge.svg)](https://github.com/BTI-US/DiceRoller-ChubGame/actions/workflows/worker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 - Last Modified: 2025-02-16
