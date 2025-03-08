@@ -2,15 +2,18 @@ name: Deploy Worker to Cloudflare
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
     paths:
       - 'worker/**'
       - 'wrangler.toml'
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
     paths:
       - 'worker/**'
       - 'wrangler.toml'
+
+  # Allow manual runs from the GitHub Actions tab
+  workflow_dispatch:
 
 jobs:
   deploy:
